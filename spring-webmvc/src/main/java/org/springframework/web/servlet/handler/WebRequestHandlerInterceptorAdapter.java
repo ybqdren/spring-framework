@@ -30,6 +30,9 @@ import org.springframework.web.servlet.ModelAndView;
  * Adapter that implements the Servlet HandlerInterceptor interface
  * and wraps an underlying WebRequestInterceptor.
  *
+ * @ref [SpringBoot之HandlerInterceptorAdapter] https://www.cnblogs.com/weianlai/p/11358768.html
+ *
+ *
  * @author Juergen Hoeller
  * @since 2.0
  * @see org.springframework.web.context.request.WebRequestInterceptor
@@ -50,6 +53,19 @@ public class WebRequestHandlerInterceptorAdapter implements AsyncHandlerIntercep
 	}
 
 
+	/**
+	 * 预处理回调方法
+	 * <p> 实现处理器的预处理（如检查登录），第三个参数为响应的处理器，自定义 Controller </p>
+	 *
+	 * @param request current HTTP request
+	 * @param response current HTTP response
+	 * @param handler chosen handler to execute, for type and/or instance evaluation
+	 * @return boolean  [
+	 * 					true 继续流程（如调用下一个拦截器或处理器） |
+	 * 					false 流程中断（如登录检查失败），不会继续调用其他的拦截器或处理器，此时我们需要通过 response 来产生响应
+	 * 					]
+	 * @throws Exception
+	 */
 	@Override
 	public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
 			throws Exception {
@@ -58,6 +74,19 @@ public class WebRequestHandlerInterceptorAdapter implements AsyncHandlerIntercep
 		return true;
 	}
 
+	/**
+	 * 后处理回调方法
+	 * <p> 实现处理器的后处理（但在渲染视图之前）</p>
+	 * <p>此时我们可以通过 modelAndView（模型和视图对象），modelAndView 也可能为 null</p>
+	 *
+	 * @param request current HTTP request
+	 * @param response current HTTP response
+	 * @param handler the handler (or {@link HandlerMethod}) that started asynchronous
+	 * execution, for type and/or instance examination
+	 * @param modelAndView the {@code ModelAndView} that the handler returned
+	 * (can also be {@code null})
+	 * @throws Exception
+	 */
 	@Override
 	public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler,
 			@Nullable ModelAndView modelAndView) throws Exception {
@@ -66,6 +95,20 @@ public class WebRequestHandlerInterceptorAdapter implements AsyncHandlerIntercep
 				(modelAndView != null && !modelAndView.wasCleared() ? modelAndView.getModelMap() : null));
 	}
 
+	/**
+	 * 整个请求处理完毕回调方法
+	 *
+	 * <p>即在视图渲染完毕时回调，即在视图渲染完毕时回调，如性能监控中我们可以在此记录结束时间并输出消耗时间</p>
+	 * <p>还可以进行一些资源清理，类似于 try-catch-finally 中的 finally ，但仅调用处理器执行链中的</p>
+	 *
+	 * @param request current HTTP request
+	 * @param response current HTTP response
+	 * @param handler the handler (or {@link HandlerMethod}) that started asynchronous
+	 * execution, for type and/or instance examination
+	 * @param ex any exception thrown on handler execution, if any; this does not
+	 * include exceptions that have been handled through an exception resolver
+	 * @throws Exception
+	 */
 	@Override
 	public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler,
 			@Nullable Exception ex) throws Exception {
