@@ -440,6 +440,8 @@ public @interface Configuration {
 	String value() default "";
 
 	/**
+	 * 返回一个共享的单例（ sinleton ）对象
+	 *
 	 * Specify whether {@code @Bean} methods should get proxied in order to enforce
 	 * bean lifecycle behavior, e.g. to return shared singleton bean instances even
 	 * in case of direct {@code @Bean} method calls in user code. This feature
