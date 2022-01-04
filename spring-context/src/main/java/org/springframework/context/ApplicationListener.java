@@ -20,6 +20,15 @@ import java.util.EventListener;
 import java.util.function.Consumer;
 
 /**
+ * 可以监听容器中发布的某个事件（event），时间领域模型开发
+ * 通过实现这个接口，传入一个泛型事件，在 run 方法中就可以监听这个事件，从而做出一定的操作
+ *
+ * ref:
+ * 		https://www.cnblogs.com/wwjj4811/p/14540493.html    Spring：ApplicationListener用法及原理
+ *      https://www.cnblogs.com/javafucker/p/10276146.html  ApplicationListener详解
+ *      https://www.cnblogs.com/nijunyang/p/12339757.html   Spring监听器---ApplicationListener
+ *
+ *
  * Interface to be implemented by application event listeners.
  *
  * <p>Based on the standard {@code java.util.EventListener} interface
