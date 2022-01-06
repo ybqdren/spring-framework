@@ -26,6 +26,8 @@ import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.core.annotation.AliasFor;
 
 /**
+ * Spring 默认创建的 Bean 是单例还是多例 ？
+ *
  * Indicates that a method produces a bean to be managed by the Spring container.
  *
  * <h3>Overview</h3>
