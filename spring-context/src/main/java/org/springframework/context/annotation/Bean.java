@@ -27,6 +27,8 @@ import org.springframework.core.annotation.AliasFor;
 
 /**
  * Spring 默认创建的 Bean 是单例还是多例 ？
+ * @ref
+ * 	 - https://www.cnblogs.com/wenhuang/p/9784419.html springboot默认创建的bean是单实还是多例
  *
  * Indicates that a method produces a bean to be managed by the Spring container.
  *
