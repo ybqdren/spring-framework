@@ -1,5 +1,5 @@
 # Spring 体系结构
-![Spring5 模块结构图](https://github.com/ybqdren/spring-framework/blob/my-spring/img/spring 模块.png)
+![Spring5 模块结构图](https://github.com/ybqdren/spring-framework/blob/my-spring/img/spring%20%E6%A8%A1%E5%9D%97.png)
 
 Spring 总共有大约 20 个模块，由 1300 多个不同的文件构成。
 而这些组件被分别整合在 核心容器 ( ConreContainer ) 、AOP ( AspectOrientedProgramming ) 
