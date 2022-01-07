@@ -425,6 +425,8 @@ import org.springframework.stereotype.Component;
 public @interface Configuration {
 
 	/**
+	 * 用于指定配置类的字节码
+	 *
 	 * Explicitly specify the name of the Spring bean definition associated with the
 	 * {@code @Configuration} class. If left unspecified (the common case), a bean
 	 * name will be automatically generated.
