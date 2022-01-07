@@ -55,3 +55,28 @@ spring-oxm 模块主要提供了一个抽象层以支撑 OXM （OXM 是 Object-t
 
 
 
+
+# Web
+由 spring-web 、 spring-webmvc 、 spring-websocket 和 spring-webflux 4 个模块组成。
+
+spring-web 模块为 Spring 提供了最基础 Web 支持，主要建立于核心容器之上，通过 Servlet 或者 Listeners 来初始化 IOC 容器，也包含一些与 Web 相关的支持。
+
+spring-webmvc 模块众所周知是一个的 Web-Servlet 模块，实现了 SpringMVC (model-view-Controller) 的 Web 应用。
+
+spring-websocket 模块主要是与 Web 前端的全双工通讯的协议。
+
+spring-webflux 是一个新的非堵塞函数式的 ReactiveWeb 框架，可以用来建立异步的，非阻塞，事件驱动的服务，并且扩展性非常好。
+
+
+# 报文发送
+即 spring-messaging 模块。
+
+spring-messaging 是从 Spring4 开始新加入的一个模块，主要职责是为 Spring 框架集成一些基础的报文传送应用。
+
+
+# Test
+即 spring-test 模块。
+
+spring-test 模块主要为测试提供支持的，毕竟在不需要发布（程序）到你的应用服务器或者连接到其他企业设施的情况下能够执行一些集成测试或者其他测试对于任何企业都是非常重要的。
+
+
