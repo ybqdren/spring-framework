@@ -22,7 +22,7 @@ ApplicationContext 容器实例化后会自动对所有的但实例 Bean 进行�
 
 
 spring-expression 模块是统一表达式语言（EL）的扩展，可以查询、管理运行中的对象，同时也方便的可以调用对象方法、操作数组、集合等。
-它的语法类似于传统 EL，但提供了额外的功能，最出色的要数函数调用和简单字符串的模板函数。这种语言的特性是基于 Spring 产品的需求而设计，他可以非常方便地同 Spring IOC 进行及哦啊胡。
+它的语法类似于传统 EL，但提供了额外的功能，最出色的要数函数调用和简单字符串的模板函数。这种语言的特性是基于 Spring 产品的需求而设计，他可以非常方便地同 Spring IOC 进行交互。
 
 
 
@@ -37,8 +37,21 @@ spring-instrument 模块是基于 JavaSE 中的"java.lang.instrument"进行设�
 
 
 
+# 数据访问及集成
+由 spring-jdbc、spring-tx、spring-orm、spring-jms 和 spring-oxm 5个模块组成。
 
 
+spring-jdbc 模块是 Spring 提供的 JDBC 抽象框架的主要实现模块，用于简化 SpringJDBC 。主要是提供 JDBC 模板方式、关系数据库对象化方式、SimpleJdbc 方式、事务管理来简化 JDBC 编程，主要实现类是 jdbcTemplate、SimpleJdbcTemplate 以及 NamedParameterJdbcTemplate。
+
+spring-tx 模块是 SpringJDBC 事务控制实现模块。使用 Spring 框架，它对事务做了很好的封装，通过它的 AOP 配置，可以灵活的配置在任何一层；但是在很多的需求和应用，直接使用 JDBC 事务控制还是有其有时的。
+其实，事务是以业务逻辑为基础的；一个完整的业务应该对应业务层里的一个方法；如果业务操作失败，则整个事务回滚；所以，事务控制是绝对应该放在业务层的；但是，持久层的设计则应该遵循一个很重要的原则；
+保证操作的原子性，即持久层的每个方法都应该是不可以分割的。所以，在使用 SpringJDBC 事务控制时，应该注意其特殊性。
+
+spring-orm 模块是 ORM 框架支持模块，主要集成 Hibernate , JavaPersistenceAPI(JPA) 和 JavaDataObjects(JDO) 用于资源管理、数据访问对象（DAO）的实现和事务策略。
+
+spring-jms 模块（javaMessageingService） 能够发送和接受信息，自 SpringFramework 4.1 以后，他还提供了对 spring-messaging 模块的支撑。
+
+spring-oxm 模块主要提供了一个抽象层以支撑 OXM （OXM 是 Object-to-XML-Mapping 的缩写，它是一个 O/M-mapper , 将 java 对象映射成 XML 数据，或者将 XML 数据映射成 Java 对象，例如： JAXB , Castor , XMLBeans , JiBX 和 XStream 等）
 
 
 
