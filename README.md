@@ -26,6 +26,19 @@ spring-expression 模块是统一表达式语言（EL）的扩展，可以查询
 
 
 
+# AOP 和设备支持
+由 spring-aop 、spring-aspects 和 spring-insrument 3个模块组成。
+
+spring-aop 是 Spring 的另一个核心模块，是 AOP 主要的实现模块。作为继 OOP 后，对程序员影响最大的编程思想之一，AOP 极大地开拓了人们对于编程的思路。
+在 Spring 中，它是以 JVM 的动态代理技术为基础，然后设计出了一系列的 AOP 横切实现，比如前置通知、返回通知、异常通知等，同时，Pointcut 接口来匹配切入点，可以使用现有的切入点来设计横切面，也可以扩展相关方法根据需求进行切入。
+spring-aspect 模块集成自 AspectJ 框架，主要是为 SpringAOP 提供多种 AOP 实现方法。
+
+spring-instrument 模块是基于 JavaSE 中的"java.lang.instrument"进行设计的，应该算是 AOP 的一个支援模块，主要作用是在 JVM 启用时，生成一个代理类，程序员通过代理类在运行时修改类的字节，从而改变一个类的功能，实现 AOP 的功能。
+
+
+
+
+
 
 
 
