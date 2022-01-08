@@ -19,6 +19,20 @@ package org.aopalliance.intercept;
 import org.aopalliance.aop.Advice;
 
 /**
+ * 拦截器 - Interceptor
+ *
+ * 简介：
+ * -拦截器用于对 URL 请求进行前置 / 后置过滤
+ * -与 Fileter 用途相似，但实现方式（底层逻辑）不同，前者是 spring mvc 的标准组件，二过滤器是 java ee 的标准组件，一般是由第三方容器厂商实现
+ * - Interceptor 底层就是基于 Spring AOP 面向切面编程实现，实现上和 aop 的环绕通知非常相似
+ *
+ *
+ * 拦截器开发流程：( springboot 跳过 step 1)
+ * - MAVEN 依赖 servlet-api 接口
+ * - 实现 HandlerInterceptor 接口
+ * - applicationContext 配置过滤地址
+ *
+ *
  * This interface represents a generic interceptor.
  *
  * <p>A generic interceptor can intercept runtime events that occur

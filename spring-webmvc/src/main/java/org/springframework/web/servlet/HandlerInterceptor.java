@@ -75,6 +75,10 @@ import org.springframework.web.method.HandlerMethod;
 public interface HandlerInterceptor {
 
 	/**
+	 * 前置执行处理（判断是否继续执行下去）
+	 * return true  送达给后面的拦截器或者是过滤器
+	 * return false 直接阻止，直接产生响应返回给客户端
+	 *
 	 * Interception point before the execution of a handler. Called after
 	 * HandlerMapping determined an appropriate handler object, but before
 	 * HandlerAdapter invokes the handler.
@@ -101,6 +105,12 @@ public interface HandlerInterceptor {
 	}
 
 	/**
+	 * 目标资源已被 Spring MVC 框架处理（目标文件已经处理成功后，但是还没有产生响应之前所要做的事情）
+	 *
+	 * 例：某个 url 对应后台的 Controller 路由，这个方法再执行外 return 之后，返回给客户端结果之前，就会执行这个方法
+	 *
+	 *
+	 *
 	 * Interception point after successful execution of a handler.
 	 * Called after HandlerAdapter actually invoked the handler, but before the
 	 * DispatcherServlet renders the view. Can expose additional model objects
@@ -126,6 +136,8 @@ public interface HandlerInterceptor {
 	}
 
 	/**
+	 * 目标响应文本已经产生（这个方法永远是最后执行）
+	 *
 	 * Callback after completion of request processing, that is, after rendering
 	 * the view. Will be called on any outcome of handler execution, thus allows
 	 * for proper resource cleanup.
