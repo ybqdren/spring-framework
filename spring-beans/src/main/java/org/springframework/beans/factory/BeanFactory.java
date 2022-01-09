@@ -21,6 +21,11 @@ import org.springframework.core.ResolvableType;
 import org.springframework.lang.Nullable;
 
 /**
+ *
+ * BeanFacroty 是 ApplicationContext 顶级接口,
+ * BeanFacroty 创建 bean 实例的时机： 在第一次获取 bean 的时候去创建 bean 实例
+ * ApplicationContext 创建 bean 的实例时机：第一次容器初始化的时候，创建所有的单例 bean 实例
+ *
  * The root interface for accessing a Spring bean container.
  *
  * <p>This is the basic client view of a bean container;

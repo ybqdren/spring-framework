@@ -78,7 +78,7 @@ public class ClassPathXmlApplicationContext extends AbstractXmlApplicationContex
 	/**
 	 * Create a new ClassPathXmlApplicationContext, loading the definitions
 	 * from the given XML file and automatically refreshing the context.
-	 * @param configLocation resource location
+	 * @param configLocation resource location             xml 文件
 	 * @throws BeansException if context creation failed
 	 */
 	public ClassPathXmlApplicationContext(String configLocation) throws BeansException {
@@ -138,8 +138,11 @@ public class ClassPathXmlApplicationContext extends AbstractXmlApplicationContex
 			String[] configLocations, boolean refresh, @Nullable ApplicationContext parent)
 			throws BeansException {
 
+		// 创建一个 resourcePatternResolver（资源匹配处理器） 实例，注解扫描器去扫描包的时候，需要先通过这个获取资源
 		super(parent);
+		// 设置传入文件的路径
 		setConfigLocations(configLocations);
+		// 刷新上下文，<<< refresh() 方法也是高级容器的入口 >>>
 		if (refresh) {
 			refresh();
 		}

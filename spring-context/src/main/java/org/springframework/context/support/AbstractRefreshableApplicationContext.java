@@ -113,21 +113,28 @@ public abstract class AbstractRefreshableApplicationContext extends AbstractAppl
 
 
 	/**
+	 * 创建一个新的 IoC 容器，如果之前有就进行删除
 	 * This implementation performs an actual refresh of this context's underlying
 	 * bean factory, shutting down the previous bean factory (if any) and
 	 * initializing a fresh bean factory for the next phase of the context's lifecycle.
 	 */
 	@Override
 	protected final void refreshBeanFactory() throws BeansException {
+		// 如果之前有 IoC 容器，则销毁
 		if (hasBeanFactory()) {
 			destroyBeans();
 			closeBeanFactory();
 		}
+
 		try {
+			// 创建 IoC 容器，也就是 DefaultListableBeanFactory
+			// 高级容器的 bean 工厂 -> AbstactRefreshableApplicationContext#createBeanFactory()
 			DefaultListableBeanFactory beanFactory = createBeanFactory();
 			beanFactory.setSerializationId(getId());
+			// 设置工厂的属性：是否允许 BeanDefinition 覆盖和是否允许循环依赖
 			customizeBeanFactory(beanFactory);
-			loadBeanDefinitions(beanFactory);
+			// 调用载入 BeanDefinition 的方法，在当前类中只定义了抽象的 loadBeanDefinitions 方法，具体的实现调用了类容器
+			loadBeanDefinitions(beanFactory); // 钩子方法
 			this.beanFactory = beanFactory;
 		}
 		catch (IOException ex) {
@@ -180,6 +187,7 @@ public abstract class AbstractRefreshableApplicationContext extends AbstractAppl
 	}
 
 	/**
+	 * 返回一个全新的 bean 工厂
 	 * Create an internal bean factory for this context.
 	 * Called for each {@link #refresh()} attempt.
 	 * <p>The default implementation creates a
@@ -212,9 +220,13 @@ public abstract class AbstractRefreshableApplicationContext extends AbstractAppl
 	 * @see DefaultListableBeanFactory#setAllowEagerClassLoading
 	 */
 	protected void customizeBeanFactory(DefaultListableBeanFactory beanFactory) {
+		// allowBeanDefinitionOverriding：允许 bean 被覆盖
+		// 场景：bean 是一个类，继承其的子类是否可以覆盖父类 bean 中的属性
 		if (this.allowBeanDefinitionOverriding != null) {
 			beanFactory.setAllowBeanDefinitionOverriding(this.allowBeanDefinitionOverriding);
 		}
+
+		// allowCircularReferences：循环依赖，只有设置了这个属性才可以有循环依赖
 		if (this.allowCircularReferences != null) {
 			beanFactory.setAllowCircularReferences(this.allowCircularReferences);
 		}

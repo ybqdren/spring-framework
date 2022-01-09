@@ -89,6 +89,9 @@ import org.springframework.util.ObjectUtils;
 import org.springframework.util.ReflectionUtils;
 
 /**
+ * 包含：
+ * 		- 高级容器初始化  < public void refresh() throws BeansException, IllegalStateException { >
+ *
  * Abstract implementation of the {@link org.springframework.context.ApplicationContext}
  * interface. Doesn't mandate the type of storage used for configuration; simply
  * implements common context functionality. Uses the Template Method design pattern,
@@ -541,47 +544,77 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 		return this.applicationListeners;
 	}
 
+	/**
+	 * AbstractApplicationContext # refresh() 方法中所有代码包含了 <<< 高级容器初始化的整体流程 >>>
+	 * 共包含了12个流程，包含2个 IOC 流程相关
+	 *
+	 * 面试中如果问 初始化的流程，只需要说清楚两个流程：正数第二步（Step 2） 和 倒数第二步（Step 11）
+	 * 其他可以补充说明 Step 5 6
+	 *
+	 * @throws BeansException
+	 * @throws IllegalStateException
+	 */
 	@Override
 	public void refresh() throws BeansException, IllegalStateException {
 		synchronized (this.startupShutdownMonitor) {
 			StartupStep contextRefresh = this.applicationStartup.start("spring.context.refresh");
 
+			// Step 1: 刷新预处理，不管之前有没有容器，现在都会清除掉重置信息
 			// Prepare this context for refreshing.
 			prepareRefresh();
 
+			// Step 2: Spring 初始化 bean 工厂的流程
+			//      a) 创建 IoC 容器（DefaultListableBeanFactory）
+			//      b) 加载解析 XML 文件（最终存储到 Document 对象中）
+			//      c) 读取 Document 对象，并完成 BeanDefinition 的加载和注册工作
 			// Tell the subclass to refresh the internal bean factory.
 			ConfigurableListableBeanFactory beanFactory = obtainFreshBeanFactory();
 
+			// Step 3: 对 IoC 容器进行一些预处理（设置一些公共属性）
 			// Prepare the bean factory for use in this context.
 			prepareBeanFactory(beanFactory);
 
 			try {
+				// Step 4: 后置处理 bean 工厂，对 bean 工厂进行一些注册操作
 				// Allows post-processing of the bean factory in context subclasses.
 				postProcessBeanFactory(beanFactory);
 
 				StartupStep beanPostProcess = this.applicationStartup.start("spring.context.beans.post-process");
+
+				// Step 5: 调用 BeanFactoryPostProcessor 后置处理器对 BeanDefinition 处理，发生在 bean 创建之前
 				// Invoke factory processors registered as beans in the context.
 				invokeBeanFactoryPostProcessors(beanFactory);
 
+				// Step 6: 注册 BeanPostProcessor 后置处理器
 				// Register bean processors that intercept bean creation.
 				registerBeanPostProcessors(beanFactory);
 				beanPostProcess.end();
 
+				// Step 7: 初始化一些消息源（比如处理国际化的 i18n 等消息源）
 				// Initialize message source for this context.
 				initMessageSource();
 
+// -------------------------------------- 基础容器中没有，只存在于高级容器中 -----------------------------------
+				// Step 8：初始化应用事件广播器
 				// Initialize event multicaster for this context.
 				initApplicationEventMulticaster();
 
+				// Step 9: 初始化一些特殊的 bean （内置 bean）
 				// Initialize other special beans in specific context subclasses.
 				onRefresh();
 
+				// Step 10：注册一些监听器
 				// Check for listener beans and register them.
 				registerListeners();
 
+// -----------------------------------------------------------------------------------------------------
+
+				// Step 11: 实例化剩余的单例 bean（）非懒加载方式
+				// 注意事项：Bean 的 IoC、DI 和 AOP 都是发生在此步骤
 				// Instantiate all remaining (non-lazy-init) singletons.
 				finishBeanFactoryInitialization(beanFactory);
 
+				// Step 12: 完成刷新时，需要发布对外的事件
 				// Last step: publish corresponding event.
 				finishRefresh();
 			}
@@ -616,8 +649,11 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	 * active flag as well as performing any initialization of property sources.
 	 */
 	protected void prepareRefresh() {
+		// 起始时间
 		// Switch to active.
 		this.startupDate = System.currentTimeMillis();
+
+		// 对标志状态进行重置
 		this.closed.set(false);
 		this.active.set(true);
 
@@ -647,6 +683,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 			this.applicationListeners.addAll(this.earlyApplicationListeners);
 		}
 
+		// 事件集合 .earlyApplicationEvents
 		// Allow for the collection of early ApplicationEvents,
 		// to be published once the multicaster is available...
 		this.earlyApplicationEvents = new LinkedHashSet<>();
@@ -662,13 +699,16 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	}
 
 	/**
+	 * AbstractApplicationContext # obtainFreshBeanFactory  生成一个新的 bean
 	 * Tell the subclass to refresh the internal bean factory.
 	 * @return the fresh BeanFactory instance
 	 * @see #refreshBeanFactory()
 	 * @see #getBeanFactory()
 	 */
 	protected ConfigurableListableBeanFactory obtainFreshBeanFactory() {
+		// 主要是通过该方法完成 IoC 容器的刷新
 		refreshBeanFactory();
+		// 获取 bean
 		return getBeanFactory();
 	}
 

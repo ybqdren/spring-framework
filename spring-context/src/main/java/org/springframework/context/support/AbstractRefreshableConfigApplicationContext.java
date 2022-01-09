@@ -76,7 +76,10 @@ public abstract class AbstractRefreshableConfigApplicationContext extends Abstra
 	public void setConfigLocations(@Nullable String... locations) {
 		if (locations != null) {
 			Assert.noNullElements(locations, "Config locations must not be null");
+			// 将传入的路径赋值给 当前实例对象的属性.configLocations
 			this.configLocations = new String[locations.length];
+
+			// 根据当前运行环境处理路径，避免非法路径
 			for (int i = 0; i < locations.length; i++) {
 				this.configLocations[i] = resolvePath(locations[i]).trim();
 			}
@@ -115,6 +118,7 @@ public abstract class AbstractRefreshableConfigApplicationContext extends Abstra
 	}
 
 	/**
+	 * 通过当前环境对路径进行转义，比如 win 与 mac 和 linux 文件路径分隔符就不一样
 	 * Resolve the given path, replacing placeholders with corresponding
 	 * environment property values if necessary. Applied to config locations.
 	 * @param path the original file path
