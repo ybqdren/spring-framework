@@ -524,15 +524,25 @@ public class BeanDefinitionParserDelegate {
 
 			// 解析 <bean> 标签的属性
 			parseBeanDefinitionAttributes(ele, beanName, containingBean, bd);
+
+			/* 解析了 <bean> 标签的子标签  --- begin */
+			// 解析 <description> 标签
 			bd.setDescription(DomUtils.getChildElementValueByTagName(ele, DESCRIPTION_ELEMENT));
 
+			// 解析 <meta> 标签
 			parseMetaElements(ele, bd);
+			// 解析 <lookup-method> 标签
 			parseLookupOverrideSubElements(ele, bd.getMethodOverrides());
+			// 解析 <replaced-method> 标签
 			parseReplacedMethodSubElements(ele, bd.getMethodOverrides());
 
+			// 解析 <constructor-arg> 标签
 			parseConstructorArgElements(ele, bd);
+			// 解析 <property> 标签
 			parsePropertyElements(ele, bd);
+			// 解析 <qualifier> 标签
 			parseQualifierElements(ele, bd);
+			/* 解析 <bean> 标签的子标签 --- end */
 
 			bd.setResource(this.readerContext.getResource());
 			bd.setSource(extractSource(ele));
@@ -556,6 +566,7 @@ public class BeanDefinitionParserDelegate {
 	}
 
 	/**
+	 * bean 标签中的属性
 	 * Apply the attributes of the given bean element to the given bean * definition.
 	 * @param ele bean declaration element
 	 * @param beanName bean name
