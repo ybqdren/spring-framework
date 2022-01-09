@@ -62,6 +62,7 @@ public class DefaultDocumentLoader implements DocumentLoader {
 
 
 	/**
+	 * 使用的是 Java 自带的 JAXP 包，进行 DOM 解析操作
 	 * Load the {@link Document} at the supplied {@link InputSource} using the standard JAXP-configured
 	 * XML parser.
 	 */
@@ -91,6 +92,7 @@ public class DefaultDocumentLoader implements DocumentLoader {
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 		factory.setNamespaceAware(namespaceAware);
 
+		// 校验模式-这里的校验分类是 xml 的各种约束
 		if (validationMode != XmlValidationModeDetector.VALIDATION_NONE) {
 			factory.setValidating(true);
 			if (validationMode == XmlValidationModeDetector.VALIDATION_XSD) {
