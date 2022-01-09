@@ -1,3 +1,12 @@
+buildscript {
+	repositories {
+		maven { url 'https://maven.aliyun.com/nexus/content/groups/public/' }
+		maven { url 'https://maven.aliyun.com/nexus/content/repositories/jcenter' }
+		google()
+		jcenter()
+	}
+}
+
 plugins {
 	id 'io.spring.dependency-management' version '1.0.11.RELEASE' apply false
 	id 'io.spring.nohttp' version '0.0.10'
@@ -13,6 +22,16 @@ plugins {
 	id 'de.undercouch.download' version '4.1.2'
 	id "me.champeau.jmh" version "0.6.6" apply false
 }
+
+allprojects {
+	repositories {
+		maven { url 'https://maven.aliyun.com/nexus/content/groups/public/' }
+		maven { url 'https://maven.aliyun.com/nexus/content/repositories/jcenter' }
+		google()
+		jcenter()
+	}
+}
+
 
 ext {
 	moduleProjects = subprojects.findAll { it.name.startsWith("spring-") }
@@ -248,7 +267,9 @@ configure(allprojects) { project ->
 			cacheChangingModulesFor 0, "seconds"
 		}
 		repositories {
-			mavenCentral()
+			mavenLocal()
+			//mavenCentral()
+			maven { url "https://repo.springsource.org/plugins-release" }
 			maven { url "https://repo.spring.io/libs-spring-framework-build" }
 		}
 	}
