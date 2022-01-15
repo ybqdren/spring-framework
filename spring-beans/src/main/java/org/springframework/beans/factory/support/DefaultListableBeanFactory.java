@@ -906,6 +906,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 		return (this.configurationFrozen || super.isBeanEligibleForMetadataCaching(beanName));
 	}
 
+	// 此方法执行时，拥有了几乎所有需要的 bean 对象
 	@Override
 	public void preInstantiateSingletons() throws BeansException {
 		if (logger.isTraceEnabled()) {
@@ -923,8 +924,11 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 			//如果 bean 不是抽象的，而且是单例的，同时还不是懒加载的，则进行下面的操作
 			if (!bd.isAbstract() && bd.isSingleton() && !bd.isLazyInit()) {
 				// 如果 bean 是一个 FacotryBean 则走下面的方法
+				// Q: BeanFactory 和 Factorybean 有什么区别？  此处的 isFactoryBean() 是专门针对 Factory bean 的
 				if (isFactoryBean(beanName)) {
-					// 工厂 Bean 的前缀为 #
+// ------------------------------------------- 生成 bean --------------------------------------------------------
+
+					// 工厂 Bean 的前缀为 #，所有的工厂 Bean 都是如此
 					Object bean = getBean(FACTORY_BEAN_PREFIX + beanName);
 
 					if (bean instanceof FactoryBean<?> factory) {
@@ -936,10 +940,13 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 						}
 					}
 				}
+// --------------------------------------------------------------------------/
+// ------------------------------------------- 直接获取 bean --------------------------------------------------------
 				else {
-					// 普通 bean 走这个方法
+					// 普通 bean 走这个方法，直接去构造方法
 					getBean(beanName);
 				}
+// --------------------------------------------------------------------------/
 			}
 		}
 

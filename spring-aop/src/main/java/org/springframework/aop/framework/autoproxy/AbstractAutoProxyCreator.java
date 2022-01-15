@@ -242,19 +242,25 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 		return wrapIfNecessary(bean, beanName, cacheKey);
 	}
 
+	// Aop的
 	@Override
 	public Object postProcessBeforeInstantiation(Class<?> beanClass, String beanName) {
 		Object cacheKey = getCacheKey(beanClass, beanName);
 
+// --------------------------------- 如果 beanName 为空或者 targetSourcedBeans 集合中已经包含了该 beanName  ---------------------------------
 		if (!StringUtils.hasLength(beanName) || !this.targetSourcedBeans.contains(beanName)) {
+			// 如果 adviceBeans 集合中已经包含了该 bean 的 name 或者 class 信息，则不处理
 			if (this.advisedBeans.containsKey(cacheKey)) {
 				return null;
 			}
+
+			// 如果是基础设施 Advice\Pointcut\Advisor\AopInfrastructureBean 或者 该 bean 是一个 aspect 的 bean，则不处理
 			if (isInfrastructureClass(beanClass) || shouldSkip(beanClass, beanName)) {
 				this.advisedBeans.put(cacheKey, Boolean.FALSE);
 				return null;
 			}
 		}
+// -------------------------------------------------------------------------------/
 
 		// Create proxy here if we have a custom TargetSource.
 		// Suppresses unnecessary default instantiation of the target bean:
@@ -264,7 +270,11 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 			if (StringUtils.hasLength(beanName)) {
 				this.targetSourcedBeans.add(beanName);
 			}
+
+			// 针对目标对象获取合适的 advisor 增强类集合
 			Object[] specificInterceptors = getAdvicesAndAdvisorsForBean(beanClass, beanName, targetSource);
+
+			// 针对增强类产生代理对象
 			Object proxy = createProxy(beanClass, beanName, specificInterceptors, targetSource);
 			this.proxyTypes.put(cacheKey, proxy.getClass());
 			return proxy;

@@ -196,7 +196,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 
 	@Override
 	public Object getBean(String name) throws BeansException {
-		// 读取 Bean 的实例，在 spring 中 do 开头的都是干苦力的
+		// 读取 Bean 的实例，在 spring 中 do 开头的都是干苦力的，其他都是面上好看的
 		return doGetBean(name, null, null, false);
 	}
 
@@ -245,10 +245,10 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 		String beanName = transformedBeanName(name);
 		Object beanInstance;
 
-		// 从缓存中获取单例的 bean：获取单例对象的时候，会触发三级缓存的处理
+		// 从缓存中获取单例的 bean：获取单例对象的时候，会触发三级缓存的处理，原型模式和单例模式最大的区别就是，前者不会放入缓存
 		// Eagerly check singleton cache for manually registered singletons.
 		Object sharedInstance = getSingleton(beanName);
-		// 如果获取到单例 bean，则走下面代码
+		// 如果获取到单例 bean（bean != null），则走下面代码
 		if (sharedInstance != null && args == null) {
 			if (logger.isTraceEnabled()) {
 				if (isSingletonCurrentlyInCreation(beanName)) {
@@ -263,15 +263,17 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 			beanInstance = getObjectForBeanInstance(sharedInstance, name, beanName, null);
 		}
 
-		else {// 如果没有获取到单例 bean，就走下面的代码
+		else {// 如果没有获取到单例 bean (bean == null)，就走下面的代码
 
 			// 如果 <原型模式(prototype)> 的 bean 发生循环引用，则直接不处理，抛出异常 （大多数获取都是用的单例模式）
+			// 原型模式是无法解决循环引用和循环依赖问题的 ...
 			// Fail if we're already creating this bean instance:
 			// We're assumably within a circular reference.
 			if (isPrototypeCurrentlyInCreation(beanName)) {
 				throw new BeanCurrentlyInCreationException(beanName);
 			}
 
+			// 调用父工厂去找一找这个 bean
 			// Check if bean definition exists in this factory.
 			BeanFactory parentBeanFactory = getParentBeanFactory();
 			if (parentBeanFactory != null && !containsBeanDefinition(beanName)) {
@@ -303,7 +305,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 					.tag("beanName", name);
 
 
-//---------------------------- bean 处理核心 --------------------------------------------------------------------------
+//---------------------------- bean 处理核心 ----------Spring 中一个 try...catch() 基本上就是一个处理核心--------------------------------
 			try {
 				if (requiredType != null) {
 					beanCreation.tag("beanType", requiredType::toString);
@@ -336,9 +338,11 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 				// 如果是单例的 Bean，执行下面分支的代码
 				// Create bean instance.
 				if (mbd.isSingleton()) {
+					// 使用 lambuda 表达式来调用 getSingleton 方法获取一个单例对象
+					// public Object getSingleton(String beanName, ObjectFactory<?> singletonFactory) 第二个参数传入一个匿名内部类
 					sharedInstance = getSingleton(beanName, () -> {
 						try {
-							// 创建单例 Bean 的主要方法
+							// 创建单例 Bean 的主要方法，创建一个单例 bean
 							return createBean(beanName, mbd, args);
 						}
 						catch (BeansException ex) {
@@ -349,8 +353,11 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 							throw ex;
 						}
 					});
+
+
 					beanInstance = getObjectForBeanInstance(sharedInstance, name, beanName, mbd);
 				}
+
 				// 多例
 				else if (mbd.isPrototype()) {
 					// It's a prototype -> create a new instance.
@@ -364,7 +371,8 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 					}
 					beanInstance = getObjectForBeanInstance(prototypeInstance, name, beanName, mbd);
 				}
-				// 既非单例也非多例
+
+				// 既非单例也非多例，request 或者是 session 级别
 				else {
 					String scopeName = mbd.getScope();
 					if (!StringUtils.hasLength(scopeName)) {
@@ -1807,10 +1815,13 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 		// Now we have the bean instance, which may be a normal bean or a FactoryBean.
 		// If it's a FactoryBean, we use it to create a bean instance, unless the
 		// caller actually wants a reference to the factory.
+
+		// 如果 bean 实例是一个普通 bean 或者是一个引用 FactoryBean 的时候，直接返回 bean 实例
 		if (!(beanInstance instanceof FactoryBean)) {
 			return beanInstance;
 		}
 
+		// 否则准备从 FactoryBean 中产生一个 bean 实例
 		Object object = null;
 		if (mbd != null) {
 			mbd.isFactoryBean = true;
