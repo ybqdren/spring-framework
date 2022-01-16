@@ -119,6 +119,8 @@ public abstract class AbstractNestablePropertyAccessor extends AbstractPropertyA
 	 */
 	protected AbstractNestablePropertyAccessor(Object object) {
 		registerDefaultEditors();
+
+		// 将对象设置到实例中
 		setWrappedInstance(object);
 	}
 

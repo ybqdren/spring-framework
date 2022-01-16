@@ -242,7 +242,7 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 		return wrapIfNecessary(bean, beanName, cacheKey);
 	}
 
-	// Aop的
+	// Aop 的方法和创建 bean 时方法调用的是同一个，但是调用的时机是不同的
 	@Override
 	public Object postProcessBeforeInstantiation(Class<?> beanClass, String beanName) {
 		Object cacheKey = getCacheKey(beanClass, beanName);

@@ -120,6 +120,11 @@ import org.springframework.util.StringUtils;
 public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFactory
 		implements AutowireCapableBeanFactory {
 
+	/**
+	 * 两种策略模式：
+     *  SimpleInstantiationStrategy （好像是使用了什么特殊的东西才会走这个策略）
+	 * 	CglibSubclassingInstantiationStrategy （默认策略）
+	 */
 	/** Strategy for creating bean instances. */
 	private InstantiationStrategy instantiationStrategy;
 
@@ -204,6 +209,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	 * Return the instantiation strategy to use for creating bean instances.
 	 */
 	protected InstantiationStrategy getInstantiationStrategy() {
+		// 返回一种策略模式
 		return this.instantiationStrategy;
 	}
 
@@ -564,12 +570,13 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			throws BeanCreationException {
 
 		// Instantiate the bean.
+		// Spring 中  ~Wrapper 都是装饰的意思，是 Spring 装饰模式的表现形式
 		BeanWrapper instanceWrapper = null;
 		if (mbd.isSingleton()) {
 			instanceWrapper = this.factoryBeanInstanceCache.remove(beanName);
 		}
 
-		// bean 初始化第一步：默认调用无参函数构造实例化 Bean
+// ------------------------------- bean 初始化第一步：默认调用无参函数构造实例化 Bean ---------------------------
 		// 构造参数依赖注入，就是发生在这一步
 		if (instanceWrapper == null) {
 			instanceWrapper = createBeanInstance(beanName, mbd, args);
@@ -598,21 +605,37 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 
 		// Eagerly cache singletons to be able to resolve circular references
 		// even when triggered by lifecycle interfaces like BeanFactoryAware.
+// ------------------------- 将第一步创建的对象放入 3 级缓存中 --------------------------------
+		// 解决循环依赖的关键步骤
+		// 判断：对象是否是单例 能不能允许循环引用、依赖 对象是否创建中
 		boolean earlySingletonExposure = (mbd.isSingleton() && this.allowCircularReferences &&
 				isSingletonCurrentlyInCreation(beanName));
+		// 如果需要提前保留单例 Bean ，则将该 Bean 放入三级缓存中
 		if (earlySingletonExposure) {
 			if (logger.isTraceEnabled()) {
 				logger.trace("Eagerly caching bean '" + beanName +
 						"' to allow for resolving potential circular references");
 			}
+			// 将刚创建的 bean 放入三级缓存中 singleFactories(key 是 beanName，value 是 FactoryBean)
+			// 此处使用了一个匿名内部类来表示 ObjectFactory () -> getEarlyBeanReference(beanName, mbd, bean)
+			// 同时也把第一步创建的 bean 提前封装到了 getEarlyBeanReference 中
 			addSingletonFactory(beanName, () -> getEarlyBeanReference(beanName, mbd, bean));
 		}
+// -------------------------------------------------------------------------------/
+
 
 		// Initialize the bean instance.
 		Object exposedObject = bean;
 		try {
+// ----------------------------------- bean 初始化第二部：填充属性 （DI 依赖注入发生在此步骤） ----------------
+			// 调用反射和内容去进行属性设置
+			// 属性值需要进行类型转换
 			populateBean(beanName, mbd, instanceWrapper);
+// ------------------------------------------------/
+
+// ------------------------------------- bean 初始化第三步：调用初始化方法，完成 bean 的初始化操作（AOP 发生在此步骤） ---
 			exposedObject = initializeBean(beanName, exposedObject, mbd);
+// --------------------------------------------------/
 		}
 		catch (Throwable ex) {
 			if (ex instanceof BeanCreationException && beanName.equals(((BeanCreationException) ex).getBeanName())) {
@@ -1151,6 +1174,8 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	}
 
 	/**
+	 * 产生 bean 实例
+	 *
 	 * Create a new instance for the specified bean, using an appropriate instantiation strategy:
 	 * factory method, constructor autowiring, or simple instantiation.
 	 * @param beanName the name of the bean
@@ -1172,13 +1197,17 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		}
 
 		Supplier<?> instanceSupplier = mbd.getInstanceSupplier();
+// ------------------------------------- 通过实例工厂获取对象 --------------------------------------------
 		if (instanceSupplier != null) {
 			return obtainFromSupplier(instanceSupplier, beanName);
 		}
+// --------------------------------------------------/
 
+//  ------------------------------------ 通过工厂方法去创建 Bean 的实例 ------------------------------------
 		if (mbd.getFactoryMethodName() != null) {
 			return instantiateUsingFactoryMethod(beanName, mbd, args);
 		}
+// ----------------------------------------------------/
 
 		// Shortcut when re-creating the same bean...
 		boolean resolved = false;
@@ -1200,10 +1229,12 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			}
 		}
 
+// -------------------------------- 不是上面两种类型就走构造器
 		// Candidate constructors for autowiring?
 		Constructor<?>[] ctors = determineConstructorsFromBeanPostProcessors(beanClass, beanName);
 		if (ctors != null || mbd.getResolvedAutowireMode() == AUTOWIRE_CONSTRUCTOR ||
 				mbd.hasConstructorArgumentValues() || !ObjectUtils.isEmpty(args)) {
+			// 如果构造器不为空，就走自动装配构造器
 			return autowireConstructor(beanName, mbd, ctors, args);
 		}
 
@@ -1212,7 +1243,9 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		if (ctors != null) {
 			return autowireConstructor(beanName, mbd, ctors, null);
 		}
+// -------------------------------------------------/
 
+		// 没有特殊处理的话，只需使用无参构造方法去创建 Bean 的实例
 		// No special handling: simply use no-arg constructor.
 		return instantiateBean(beanName, mbd);
 	}
@@ -1294,6 +1327,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	}
 
 	/**
+	 * 使用无参构造器去创建对象
 	 * Instantiate the given bean using its default constructor.
 	 * @param beanName the name of the bean
 	 * @param mbd the bean definition for the bean
@@ -1301,6 +1335,8 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	 */
 	protected BeanWrapper instantiateBean(String beanName, RootBeanDefinition mbd) {
 		try {
+			// Startege 策略模式
+			// 获取实例化的策略
 			Object beanInstance = getInstantiationStrategy().instantiate(mbd, beanName, this);
 			BeanWrapper bw = new BeanWrapperImpl(beanInstance);
 			initBeanWrapper(bw);

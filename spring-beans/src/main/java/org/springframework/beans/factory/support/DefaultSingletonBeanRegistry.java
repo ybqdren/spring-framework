@@ -160,6 +160,8 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 	}
 
 	/**
+	 * 将 key,value 放入三级缓存中，三级缓存的 value 是一个 ObjectFactory
+	 *
 	 * Add the given singleton factory for building the specified singleton
 	 * if necessary.
 	 * <p>To be called for eager registration of singletons, e.g. to be able to
@@ -170,8 +172,11 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 	protected void addSingletonFactory(String beanName, ObjectFactory<?> singletonFactory) {
 		Assert.notNull(singletonFactory, "Singleton factory must not be null");
 		synchronized (this.singletonObjects) {
+			// 如果一级缓存中没有该实例，则放入三级缓存中
 			if (!this.singletonObjects.containsKey(beanName)) {
+				// 放入三级缓存
 				this.singletonFactories.put(beanName, singletonFactory);
+				// 从二级缓存中移除
 				this.earlySingletonObjects.remove(beanName);
 				this.registeredSingletons.add(beanName);
 			}
@@ -186,6 +191,18 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 
 	/**
 	 * 获取单例对象时会触发三级缓存的处理
+	 *
+ 	 * <p>
+ 	 *     如果要提早暴露 bean，就必须先通过三级进行一些操作，判定是否是一个需要对外暴露的 bean，
+ 	 *     确定之后再放入二级缓存中，然后删除三级缓存中的对应 bean，
+ 	 *     所以二级缓存中包含的一定是要提早暴露的 bean，而三级缓存中包含提早暴露的 bean，但是还包含不能暴露的 bean。
+ 	 * </p>
+ 	 *
+ 	 * <p>
+ 	 *     我们去 getBean 的时候，想要的 bean 都放在缓存中，就不需要每次 getBean 时都会创建新的 bean 实例
+ 	 *     一级缓存中的内容，是在每次执行创建 bean 三部曲 AbstractAutowireCapableBeanFactory#doCreateBean 时放的
+ 	 * </p>
+	 *
 	 * Return the (raw) singleton object registered under the given name.
 	 * <p>Checks already instantiated singletons and also allows for an early
 	 * reference to a currently created singleton (resolving a circular reference).
@@ -272,7 +289,7 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 // ------------------------------- bean 创建流程完成 ---------------------------------------------------------
 				try {
 					// 调用匿名内部类获取单例对象
-					// 该步骤的完成就意味着 bean 的创建流程完成
+					// 该步骤的完成就意味着 bean 的创建流程完成（获取完了 bean）
 					// singletonFactory.getObject() 没有实现类，是靠方法参数 ObjectFactory<?> singletonFactory ，传入一个匿名内部类来实现
 					singletonObject = singletonFactory.getObject();
 					newSingleton = true;

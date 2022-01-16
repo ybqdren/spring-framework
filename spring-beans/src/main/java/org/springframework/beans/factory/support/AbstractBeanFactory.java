@@ -335,7 +335,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 					}
 				}
 
-				// 如果是单例的 Bean，执行下面分支的代码
+// ---------------------------------------- 单例的 Bean---------------------------------------------------------------------------
 				// Create bean instance.
 				if (mbd.isSingleton()) {
 					// 使用 lambuda 表达式来调用 getSingleton 方法获取一个单例对象
@@ -357,7 +357,9 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 
 					beanInstance = getObjectForBeanInstance(sharedInstance, name, beanName, mbd);
 				}
+// -----------------------------------------------------------------------------------
 
+// ------------------------- 多例（原型） ----------------------------------------------------
 				// 多例
 				else if (mbd.isPrototype()) {
 					// It's a prototype -> create a new instance.
@@ -371,6 +373,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 					}
 					beanInstance = getObjectForBeanInstance(prototypeInstance, name, beanName, mbd);
 				}
+// -----------------------------------------------------------------------------
 
 				// 既非单例也非多例，request 或者是 session 级别
 				else {
