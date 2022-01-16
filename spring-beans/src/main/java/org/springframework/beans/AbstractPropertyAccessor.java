@@ -74,8 +74,10 @@ public abstract class AbstractPropertyAccessor extends TypeConverterSupport impl
 		setPropertyValues(new MutablePropertyValues(map));
 	}
 
+	// 属性访问器
 	@Override
 	public void setPropertyValues(PropertyValues pvs) throws BeansException {
+		// 完成依赖注入
 		setPropertyValues(pvs, false, false);
 	}
 
@@ -101,6 +103,7 @@ public abstract class AbstractPropertyAccessor extends TypeConverterSupport impl
 				// here, if there is a critical failure such as no matching field.
 				// We can attempt to deal only with less serious exceptions.
 				try {
+					// 依赖属性注入
 					setPropertyValue(pv);
 				}
 				catch (NotWritablePropertyException ex) {

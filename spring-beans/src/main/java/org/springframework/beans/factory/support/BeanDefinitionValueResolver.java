@@ -109,6 +109,7 @@ class BeanDefinitionValueResolver {
 	public Object resolveValueIfNecessary(Object argName, @Nullable Object value) {
 		// We must check each value to see whether it requires a runtime reference
 		// to another bean to be resolved.
+		// 先解决引用类型的属性值
 		if (value instanceof RuntimeBeanReference ref) {
 			return resolveReference(argName, ref);
 		}
@@ -196,12 +197,16 @@ class BeanDefinitionValueResolver {
 			});
 			return copy;
 		}
-		else if (value instanceof TypedStringValue typedStringValue) {
+
+// ---------------------------- 对字符串进行处理 --------------------------------------------------
+		else if (value instanceof TypedStringValue typedStringValue) { // 值是简单值
 			// Convert value to target type here.
 			Object valueObject = evaluate(typedStringValue);
 			try {
+				// 获取简单类型的包装类型
 				Class<?> resolvedTargetType = resolveTargetType(typedStringValue);
 				if (resolvedTargetType != null) {
+					// 使用类型转换器进行类型转换
 					return this.typeConverter.convertIfNecessary(valueObject, resolvedTargetType);
 				}
 				else {
@@ -215,6 +220,7 @@ class BeanDefinitionValueResolver {
 						"Error converting typed String value for " + argName, ex);
 			}
 		}
+// ------------------------------------------------------------- /
 		else if (value instanceof NullBean) {
 			return null;
 		}

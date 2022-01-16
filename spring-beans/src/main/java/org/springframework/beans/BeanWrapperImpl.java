@@ -268,11 +268,17 @@ public class BeanWrapperImpl extends AbstractNestablePropertyAccessor implements
 
 		@Override
 		public void setValue(@Nullable Object value) throws Exception {
+
+			// 使用 JDK 内省技术，获取对指定属性的 setter 方法的获取（writeMethod）
 			Method writeMethod = (this.pd instanceof GenericTypeAwarePropertyDescriptor ?
 					((GenericTypeAwarePropertyDescriptor) this.pd).getWriteMethodForActualAccess() :
 					this.pd.getWriteMethod());
+
+			// 通过发射工具类，对 setter 方法开启暴力破解（私有的方法，也可以调用）
 			ReflectionUtils.makeAccessible(writeMethod);
-			writeMethod.invoke(getWrappedInstance(), value);
+			// 使用反射技术，去执行对应的 setter 方法，不一定真正拥有该属性，但是一定要有对应的 setter 方法
+			writeMethod.invoke(getWrappedInstance(), value); // method.invoke(obj,args)
+
 		}
 	}
 

@@ -238,13 +238,20 @@ public abstract class AbstractNestablePropertyAccessor extends AbstractPropertyA
 	public void setPropertyValue(String propertyName, @Nullable Object value) throws BeansException {
 		AbstractNestablePropertyAccessor nestedPa;
 		try {
+			// 根据属性名称获取指定的属性访问器，通过属性访问器去访问正常的属性和不正常的属性
 			nestedPa = getPropertyAccessorForPropertyPath(propertyName);
 		}
 		catch (NotReadablePropertyException ex) {
 			throw new NotWritablePropertyException(getRootClass(), this.nestedPath + propertyName,
 					"Nested property in path '" + propertyName + "' does not exist", ex);
 		}
+
+		// user.name
+		// map["key"]
+		// 通过属性访问器，对属性进行分词处理
 		PropertyTokenHolder tokens = getPropertyNameTokens(getFinalPath(nestedPa, propertyName));
+
+		// 属性注入
 		nestedPa.setPropertyValue(tokens, new PropertyValue(propertyName, value));
 	}
 
@@ -272,10 +279,14 @@ public abstract class AbstractNestablePropertyAccessor extends AbstractPropertyA
 		}
 	}
 
+	// 正常的属性注入
 	protected void setPropertyValue(PropertyTokenHolder tokens, PropertyValue pv) throws BeansException {
+		// tokens.keys 只要不为空，则表示要依赖的属性是集合类型的属性
 		if (tokens.keys != null) {
 			processKeyedProperty(tokens, pv);
 		}
+
+		// 设置非集合类型的属性
 		else {
 			processLocalProperty(tokens, pv);
 		}
@@ -417,6 +428,7 @@ public abstract class AbstractNestablePropertyAccessor extends AbstractPropertyA
 	}
 
 	private void processLocalProperty(PropertyTokenHolder tokens, PropertyValue pv) {
+		// 获取属性处理器
 		PropertyHandler ph = getLocalPropertyHandler(tokens.actualName);
 		if (ph == null || !ph.isWritable()) {
 			if (pv.isOptional()) {
@@ -436,6 +448,7 @@ public abstract class AbstractNestablePropertyAccessor extends AbstractPropertyA
 
 		Object oldValue = null;
 		try {
+			// 获取原始的值
 			Object originalValue = pv.getValue();
 			Object valueToApply = originalValue;
 			if (!Boolean.FALSE.equals(pv.conversionNecessary)) {
@@ -462,6 +475,8 @@ public abstract class AbstractNestablePropertyAccessor extends AbstractPropertyA
 				}
 				pv.getOriginalPropertyValue().conversionNecessary = (valueToApply != originalValue);
 			}
+
+			// 通过 PropertyHandler 去完成依赖注入
 			ph.setValue(valueToApply);
 		}
 		catch (TypeMismatchException ex) {
