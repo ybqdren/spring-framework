@@ -408,6 +408,7 @@ public abstract class AbstractNestablePropertyAccessor extends AbstractPropertyA
 		catch (NotReadablePropertyException ex) {
 			throw new NotWritablePropertyException(getRootClass(), this.nestedPath + tokens.canonicalName,
 					"Cannot access indexed value in property referenced " +
+
 					"in indexed property path '" + tokens.canonicalName + "'", ex);
 		}
 
