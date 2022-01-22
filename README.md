@@ -81,6 +81,7 @@ spring-test 模块主要为测试提供支持的，毕竟在不需要发布（�
 
 
 # 源码速查
-## [Spring 高级容器](\tree\my-spring\spring-context\src\main\java\org\springframework\context\support\AbstractApplicationContext.java)
+
+## [Spring 高级容器](/tree/my-spring/spring-context/src/main/java/org/springframework/context/support/AbstractApplicationContext.java)
 
 `public void refresh() throws BeansException, IllegalStateException`  包含高级容器初始化的所有流程
