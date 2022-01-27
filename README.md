@@ -80,3 +80,7 @@ spring-messaging 是从 Spring4 开始新加入的一个模块，主要职责是
 spring-test 模块主要为测试提供支持的，毕竟在不需要发布（程序）到你的应用服务器或者连接到其他企业设施的情况下能够执行一些集成测试或者其他测试对于任何企业都是非常重要的。
 
 
+# Spring 中的事件驱动
+![](img/spring事件驱动.png)
+
+> https://www.iteye.com/blog/jinnianshilongnian-1902886

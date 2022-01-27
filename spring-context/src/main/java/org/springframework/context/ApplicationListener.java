@@ -20,7 +20,7 @@ import java.util.EventListener;
 import java.util.function.Consumer;
 
 /**
- * 可以监听容器中发布的某个事件（event），时间领域模型开发
+ * 可以监听容器中发布的某个事件（event），事件领域模型开发
  * 通过实现这个接口，传入一个泛型事件，在 run 方法中就可以监听这个事件，从而做出一定的操作
  *
  * ref:
