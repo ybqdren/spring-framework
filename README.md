@@ -13,7 +13,8 @@ Spring 总共有大约 20 个模块，由 1300 多个不同的文件构成。
 # 核心容器
 由 spring-beans 、spring-core 、 spring-context 和 spring-expression（Spring Expression Language,SpEL ） 4个模块组成。
 
-spring-beans 和 spring-core 模块是 Spring 框架的核心模块，包含了`控制反转`(Inversion Of Control , IOC) 和 `依赖注入`(Dependency InJection , DI) 。
+spring-beans 和 spring-core 模块是 Spring 框架的核心模块，包含了`控制反转`(Inversi
+on Of Control , IOC) 和 `依赖注入`(Dependency InJection , DI) 。
 BeanFactory 接口是 Spring 框架中的核心接口，它是工厂模式的具体实现。BeanFactory 使用控制反转对应用程序的配置和依赖性规范与实际的应用程序进行了分离。
 但 BeanFactory 容器实例化后并不会自动实例化 Bean ，只有当 Bean 被使用时 BeanFactory 容器才会对该 Bean 进行实例化与依赖关系的装配。
 
