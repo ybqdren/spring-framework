@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2021 the original author or authors.
+ * Copyright 2002-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ import org.springframework.core.SpringProperties;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
@@ -195,6 +195,7 @@ public class RestTemplate extends InterceptingHttpAccessor implements RestOperat
 			this.messageConverters.add(new MappingJackson2CborHttpMessageConverter());
 		}
 
+		updateErrorHandlerConverters();
 		this.uriTemplateHandler = initUriTemplateHandler();
 	}
 
@@ -219,8 +220,15 @@ public class RestTemplate extends InterceptingHttpAccessor implements RestOperat
 		validateConverters(messageConverters);
 		this.messageConverters.addAll(messageConverters);
 		this.uriTemplateHandler = initUriTemplateHandler();
+		updateErrorHandlerConverters();
 	}
 
+
+	private void updateErrorHandlerConverters() {
+		if (this.errorHandler instanceof DefaultResponseErrorHandler handler) {
+			handler.setMessageConverters(this.messageConverters);
+		}
+	}
 
 	private static DefaultUriBuilderFactory initUriTemplateHandler() {
 		DefaultUriBuilderFactory uriFactory = new DefaultUriBuilderFactory();
@@ -240,6 +248,7 @@ public class RestTemplate extends InterceptingHttpAccessor implements RestOperat
 			this.messageConverters.clear();
 			this.messageConverters.addAll(messageConverters);
 		}
+		updateErrorHandlerConverters();
 	}
 
 	private void validateConverters(List<HttpMessageConverter<?>> messageConverters) {
@@ -262,6 +271,7 @@ public class RestTemplate extends InterceptingHttpAccessor implements RestOperat
 	public void setErrorHandler(ResponseErrorHandler errorHandler) {
 		Assert.notNull(errorHandler, "ResponseErrorHandler must not be null");
 		this.errorHandler = errorHandler;
+		updateErrorHandlerConverters();
 	}
 
 	/**
@@ -798,9 +808,8 @@ public class RestTemplate extends InterceptingHttpAccessor implements RestOperat
 		boolean hasError = errorHandler.hasError(response);
 		if (logger.isDebugEnabled()) {
 			try {
-				int code = response.getRawStatusCode();
-				HttpStatus status = HttpStatus.resolve(code);
-				logger.debug("Response " + (status != null ? status : code));
+				HttpStatusCode statusCode = response.getStatusCode();
+				logger.debug("Response " + statusCode);
 			}
 			catch (IOException ex) {
 				// ignore
@@ -1026,10 +1035,10 @@ public class RestTemplate extends InterceptingHttpAccessor implements RestOperat
 		public ResponseEntity<T> extractData(ClientHttpResponse response) throws IOException {
 			if (this.delegate != null) {
 				T body = this.delegate.extractData(response);
-				return ResponseEntity.status(response.getRawStatusCode()).headers(response.getHeaders()).body(body);
+				return ResponseEntity.status(response.getStatusCode()).headers(response.getHeaders()).body(body);
 			}
 			else {
-				return ResponseEntity.status(response.getRawStatusCode()).headers(response.getHeaders()).build();
+				return ResponseEntity.status(response.getStatusCode()).headers(response.getHeaders()).build();
 			}
 		}
 	}

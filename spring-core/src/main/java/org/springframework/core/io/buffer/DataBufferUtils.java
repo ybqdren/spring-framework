@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2021 the original author or authors.
+ * Copyright 2002-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -480,8 +480,8 @@ public abstract class DataBufferUtils {
 	 */
 	@SuppressWarnings("unchecked")
 	public static <T extends DataBuffer> T retain(T dataBuffer) {
-		if (dataBuffer instanceof PooledDataBuffer) {
-			return (T) ((PooledDataBuffer) dataBuffer).retain();
+		if (dataBuffer instanceof PooledDataBuffer pooledDataBuffer) {
+			return (T) pooledDataBuffer.retain();
 		}
 		else {
 			return dataBuffer;
@@ -498,8 +498,8 @@ public abstract class DataBufferUtils {
 	 */
 	@SuppressWarnings("unchecked")
 	public static <T extends DataBuffer> T touch(T dataBuffer, Object hint) {
-		if (dataBuffer instanceof PooledDataBuffer) {
-			return (T) ((PooledDataBuffer) dataBuffer).touch(hint);
+		if (dataBuffer instanceof PooledDataBuffer pooledDataBuffer) {
+			return (T) pooledDataBuffer.touch(hint);
 		}
 		else {
 			return dataBuffer;
@@ -568,12 +568,12 @@ public abstract class DataBufferUtils {
 	 * @throws DataBufferLimitException if maxByteCount is exceeded
 	 * @since 5.1.11
 	 */
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public static Mono<DataBuffer> join(Publisher<? extends DataBuffer> buffers, int maxByteCount) {
 		Assert.notNull(buffers, "'dataBuffers' must not be null");
 
-		if (buffers instanceof Mono) {
-			return (Mono<DataBuffer>) buffers;
+		if (buffers instanceof Mono mono) {
+			return mono;
 		}
 
 		return Flux.from(buffers)
@@ -607,15 +607,14 @@ public abstract class DataBufferUtils {
 	}
 
 	private static NestedMatcher createMatcher(byte[] delimiter) {
-		Assert.isTrue(delimiter.length > 0, "Delimiter must not be empty");
-		switch (delimiter.length) {
-			case 1:
-				return (delimiter[0] == 10 ? SingleByteMatcher.NEWLINE_MATCHER : new SingleByteMatcher(delimiter));
-			case 2:
-				return new TwoByteMatcher(delimiter);
-			default:
-				return new KnuthMorrisPrattMatcher(delimiter);
-		}
+		// extract length due to Eclipse IDE compiler error in switch expression
+		int length = delimiter.length;
+		Assert.isTrue(length > 0, "Delimiter must not be empty");
+		return switch (length) {
+			case 1 -> (delimiter[0] == 10 ? SingleByteMatcher.NEWLINE_MATCHER : new SingleByteMatcher(delimiter));
+			case 2 -> new TwoByteMatcher(delimiter);
+			default -> new KnuthMorrisPrattMatcher(delimiter);
+		};
 	}
 
 
@@ -1060,7 +1059,7 @@ public abstract class DataBufferUtils {
 
 		@Override
 		public Context currentContext() {
-			return this.sink.currentContext();
+			return Context.of(this.sink.contextView());
 		}
 
 	}
@@ -1157,7 +1156,7 @@ public abstract class DataBufferUtils {
 
 		@Override
 		public Context currentContext() {
-			return this.sink.currentContext();
+			return Context.of(this.sink.contextView());
 		}
 
 	}

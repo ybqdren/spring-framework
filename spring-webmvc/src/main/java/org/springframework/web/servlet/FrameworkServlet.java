@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2021 the original author or authors.
+ * Copyright 2002-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -48,7 +48,7 @@ import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
@@ -68,7 +68,6 @@ import org.springframework.web.context.support.ServletRequestHandledEvent;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 import org.springframework.web.context.support.XmlWebApplicationContext;
 import org.springframework.web.cors.CorsUtils;
-import org.springframework.web.util.NestedServletException;
 import org.springframework.web.util.WebUtils;
 
 /**
@@ -1009,7 +1008,7 @@ public abstract class FrameworkServlet extends HttpServletBean implements Applic
 		}
 		catch (Throwable ex) {
 			failureCause = ex;
-			throw new NestedServletException("Request processing failed", ex);
+			throw new ServletException("Request processing failed: " + ex, ex);
 		}
 
 		finally {
@@ -1125,8 +1124,8 @@ public abstract class FrameworkServlet extends HttpServletBean implements Applic
 			logger.debug("Exiting from \"" + dispatchType + "\" dispatch, status " + status + headers);
 		}
 		else {
-			HttpStatus httpStatus = HttpStatus.resolve(status);
-			logger.debug("Completed " + (httpStatus != null ? httpStatus : status) + headers);
+			HttpStatusCode httpStatus = HttpStatusCode.valueOf(status);
+			logger.debug("Completed " + httpStatus + headers);
 		}
 	}
 

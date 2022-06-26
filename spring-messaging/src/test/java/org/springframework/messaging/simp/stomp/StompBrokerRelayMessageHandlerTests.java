@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2020 the original author or authors.
+ * Copyright 2002-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,6 @@ package org.springframework.messaging.simp.stomp;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.Callable;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -261,6 +260,30 @@ class StompBrokerRelayMessageHandlerTests {
 		assertThat(captor.getValue()).isSameAs(message);
 	}
 
+	@Test
+	void alreadyConnected() {
+
+		this.brokerRelay.start();
+
+		Message<byte[]> connect = connectMessage("sess1", "joe");
+		this.brokerRelay.handleMessage(connect);
+
+		assertThat(this.tcpClient.getSentMessages().size()).isEqualTo(2);
+
+		StompHeaderAccessor headers1 = this.tcpClient.getSentHeaders(0);
+		assertThat(headers1.getCommand()).isEqualTo(StompCommand.CONNECT);
+		assertThat(headers1.getSessionId()).isEqualTo(StompBrokerRelayMessageHandler.SYSTEM_SESSION_ID);
+
+		StompHeaderAccessor headers2 = this.tcpClient.getSentHeaders(1);
+		assertThat(headers2.getCommand()).isEqualTo(StompCommand.CONNECT);
+		assertThat(headers2.getSessionId()).isEqualTo("sess1");
+
+		this.brokerRelay.handleMessage(connect);
+
+		assertThat(this.tcpClient.getSentMessages().size()).isEqualTo(2);
+		assertThat(this.outboundChannel.getMessages()).isEmpty();
+	}
+
 	private Message<byte[]> connectMessage(String sessionId, String user) {
 		StompHeaderAccessor headers = StompHeaderAccessor.create(StompCommand.CONNECT);
 		headers.setSessionId(sessionId);
@@ -286,12 +309,7 @@ class StompBrokerRelayMessageHandlerTests {
 
 
 	private static ListenableFutureTask<Void> getVoidFuture() {
-		ListenableFutureTask<Void> futureTask = new ListenableFutureTask<>(new Callable<Void>() {
-			@Override
-			public Void call() {
-				return null;
-			}
-		});
+		ListenableFutureTask<Void> futureTask = new ListenableFutureTask<>(() -> null);
 		futureTask.run();
 		return futureTask;
 	}

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2021 the original author or authors.
+ * Copyright 2002-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -333,20 +333,18 @@ public class MimeMessageHelper {
 	 */
 	protected void createMimeMultiparts(MimeMessage mimeMessage, int multipartMode) throws MessagingException {
 		switch (multipartMode) {
-			case MULTIPART_MODE_NO:
-				setMimeMultiparts(null, null);
-				break;
-			case MULTIPART_MODE_MIXED:
+			case MULTIPART_MODE_NO -> setMimeMultiparts(null, null);
+			case MULTIPART_MODE_MIXED -> {
 				MimeMultipart mixedMultipart = new MimeMultipart(MULTIPART_SUBTYPE_MIXED);
 				mimeMessage.setContent(mixedMultipart);
 				setMimeMultiparts(mixedMultipart, mixedMultipart);
-				break;
-			case MULTIPART_MODE_RELATED:
+			}
+			case MULTIPART_MODE_RELATED -> {
 				MimeMultipart relatedMultipart = new MimeMultipart(MULTIPART_SUBTYPE_RELATED);
 				mimeMessage.setContent(relatedMultipart);
 				setMimeMultiparts(relatedMultipart, relatedMultipart);
-				break;
-			case MULTIPART_MODE_MIXED_RELATED:
+			}
+			case MULTIPART_MODE_MIXED_RELATED -> {
 				MimeMultipart rootMixedMultipart = new MimeMultipart(MULTIPART_SUBTYPE_MIXED);
 				mimeMessage.setContent(rootMixedMultipart);
 				MimeMultipart nestedRelatedMultipart = new MimeMultipart(MULTIPART_SUBTYPE_RELATED);
@@ -354,8 +352,8 @@ public class MimeMessageHelper {
 				relatedBodyPart.setContent(nestedRelatedMultipart);
 				rootMixedMultipart.addBodyPart(relatedBodyPart);
 				setMimeMultiparts(rootMixedMultipart, nestedRelatedMultipart);
-				break;
-			default:
+			}
+			default ->
 				throw new IllegalArgumentException("Only multipart modes MIXED_RELATED, RELATED and NO supported");
 		}
 	}

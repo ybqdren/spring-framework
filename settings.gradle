@@ -1,13 +1,14 @@
 pluginManagement {
 	repositories {
+		mavenCentral()
 		gradlePluginPortal()
-		maven { url "https://repo.spring.io/plugins-release" }
+		maven { url "https://repo.spring.io/release" }
 	}
 }
 
 plugins {
-	id "com.gradle.enterprise" version "3.7.2"
-	id "io.spring.ge.conventions" version "0.0.7"
+	id "com.gradle.enterprise" version "3.10.2"
+	id "io.spring.ge.conventions" version "0.0.9"
 }
 
 include "spring-aop"
@@ -17,6 +18,9 @@ include "spring-context"
 include "spring-context-indexer"
 include "spring-context-support"
 include "spring-core"
+include "spring-core-graalvm"
+project(':spring-core-graalvm').projectDir = file('spring-core/graalvm')
+include "spring-core-test"
 include "spring-expression"
 include "spring-instrument"
 include "spring-jcl"

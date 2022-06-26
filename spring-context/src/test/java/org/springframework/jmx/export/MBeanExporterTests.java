@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2021 the original author or authors.
+ * Copyright 2002-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -59,6 +59,7 @@ import org.springframework.jmx.support.RegistrationPolicy;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
+import static org.assertj.core.api.Assertions.assertThatRuntimeException;
 
 /**
  * Integration tests for the {@link MBeanExporter} class.
@@ -90,11 +91,8 @@ public class MBeanExporterTests extends AbstractMBeanServerTests {
 	@Test
 	void testRegisterNotificationListenerForNonExistentMBean() throws Exception {
 		Map<String, NotificationListener> listeners = new HashMap<>();
-		NotificationListener dummyListener = new NotificationListener() {
-			@Override
-			public void handleNotification(Notification notification, Object handback) {
-				throw new UnsupportedOperationException();
-			}
+		NotificationListener dummyListener = (notification, handback) -> {
+			throw new UnsupportedOperationException();
 		};
 		// the MBean with the supplied object name does not exist...
 		listeners.put("spring:type=Test", dummyListener);
@@ -592,8 +590,8 @@ public class MBeanExporterTests extends AbstractMBeanServerTests {
 		exporter.setBeans(beansToExport);
 		exporter.setBeanFactory(factory);
 
-		assertThatExceptionOfType(RuntimeException.class).as("failed during creation of RuntimeExceptionThrowingConstructorBean").isThrownBy(() ->
-				start(exporter));
+		assertThatRuntimeException().as("failed during creation of RuntimeExceptionThrowingConstructorBean")
+			.isThrownBy(() -> start(exporter));
 
 		assertIsNotRegistered("Must have unregistered all previously registered MBeans due to RuntimeException",
 				ObjectNameManager.getInstance(objectName1));

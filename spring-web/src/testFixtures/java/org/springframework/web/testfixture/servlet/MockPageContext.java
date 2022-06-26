@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2021 the original author or authors.
+ * Copyright 2002-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -154,20 +154,11 @@ public class MockPageContext extends PageContext {
 	public void setAttribute(String name, @Nullable Object value, int scope) {
 		Assert.notNull(name, "Attribute name must not be null");
 		switch (scope) {
-			case PAGE_SCOPE:
-				setAttribute(name, value);
-				break;
-			case REQUEST_SCOPE:
-				this.request.setAttribute(name, value);
-				break;
-			case SESSION_SCOPE:
-				this.request.getSession().setAttribute(name, value);
-				break;
-			case APPLICATION_SCOPE:
-				this.servletContext.setAttribute(name, value);
-				break;
-			default:
-				throw new IllegalArgumentException("Invalid scope: " + scope);
+			case PAGE_SCOPE -> setAttribute(name, value);
+			case REQUEST_SCOPE -> this.request.setAttribute(name, value);
+			case SESSION_SCOPE -> this.request.getSession().setAttribute(name, value);
+			case APPLICATION_SCOPE -> this.servletContext.setAttribute(name, value);
+			default -> throw new IllegalArgumentException("Invalid scope: " + scope);
 		}
 	}
 
@@ -182,19 +173,16 @@ public class MockPageContext extends PageContext {
 	@Nullable
 	public Object getAttribute(String name, int scope) {
 		Assert.notNull(name, "Attribute name must not be null");
-		switch (scope) {
-			case PAGE_SCOPE:
-				return getAttribute(name);
-			case REQUEST_SCOPE:
-				return this.request.getAttribute(name);
-			case SESSION_SCOPE:
+		return switch (scope) {
+			case PAGE_SCOPE -> getAttribute(name);
+			case REQUEST_SCOPE -> this.request.getAttribute(name);
+			case SESSION_SCOPE -> {
 				HttpSession session = this.request.getSession(false);
-				return (session != null ? session.getAttribute(name) : null);
-			case APPLICATION_SCOPE:
-				return this.servletContext.getAttribute(name);
-			default:
-				throw new IllegalArgumentException("Invalid scope: " + scope);
-		}
+				yield (session != null ? session.getAttribute(name) : null);
+			}
+			case APPLICATION_SCOPE -> this.servletContext.getAttribute(name);
+			default -> throw new IllegalArgumentException("Invalid scope: " + scope);
+		};
 	}
 
 	@Override
@@ -226,20 +214,11 @@ public class MockPageContext extends PageContext {
 	public void removeAttribute(String name, int scope) {
 		Assert.notNull(name, "Attribute name must not be null");
 		switch (scope) {
-			case PAGE_SCOPE:
-				this.attributes.remove(name);
-				break;
-			case REQUEST_SCOPE:
-				this.request.removeAttribute(name);
-				break;
-			case SESSION_SCOPE:
-				this.request.getSession().removeAttribute(name);
-				break;
-			case APPLICATION_SCOPE:
-				this.servletContext.removeAttribute(name);
-				break;
-			default:
-				throw new IllegalArgumentException("Invalid scope: " + scope);
+			case PAGE_SCOPE -> this.attributes.remove(name);
+			case REQUEST_SCOPE -> this.request.removeAttribute(name);
+			case SESSION_SCOPE -> this.request.getSession().removeAttribute(name);
+			case APPLICATION_SCOPE -> this.servletContext.removeAttribute(name);
+			default -> throw new IllegalArgumentException("Invalid scope: " + scope);
 		}
 	}
 
@@ -268,19 +247,16 @@ public class MockPageContext extends PageContext {
 
 	@Override
 	public Enumeration<String> getAttributeNamesInScope(int scope) {
-		switch (scope) {
-			case PAGE_SCOPE:
-				return getAttributeNames();
-			case REQUEST_SCOPE:
-				return this.request.getAttributeNames();
-			case SESSION_SCOPE:
+		return switch (scope) {
+			case PAGE_SCOPE -> getAttributeNames();
+			case REQUEST_SCOPE -> this.request.getAttributeNames();
+			case SESSION_SCOPE -> {
 				HttpSession session = this.request.getSession(false);
-				return (session != null ? session.getAttributeNames() : Collections.emptyEnumeration());
-			case APPLICATION_SCOPE:
-				return this.servletContext.getAttributeNames();
-			default:
-				throw new IllegalArgumentException("Invalid scope: " + scope);
-		}
+				yield (session != null ? session.getAttributeNames() : Collections.emptyEnumeration());
+			}
+			case APPLICATION_SCOPE -> this.servletContext.getAttributeNames();
+			default -> throw new IllegalArgumentException("Invalid scope: " + scope);
+		};
 	}
 
 	@Override

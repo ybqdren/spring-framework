@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2021 the original author or authors.
+ * Copyright 2002-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 package org.springframework.messaging.simp.stomp;
 
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -26,6 +27,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.TransportConnector;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.jupiter.api.AfterEach;
@@ -46,7 +48,6 @@ import org.springframework.messaging.simp.broker.BrokerAvailabilityEvent;
 import org.springframework.messaging.support.ExecutorSubscribableChannel;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.util.Assert;
-import org.springframework.util.SocketUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -71,14 +72,15 @@ public class StompBrokerRelayMessageHandlerIntegrationTests {
 
 	private TestEventPublisher eventPublisher;
 
-	private int port;
+	// initial value of zero implies that a random ephemeral port should be used
+	private int port = 0;
 
 
 	@BeforeEach
+	@SuppressWarnings("deprecation")
 	public void setup(TestInfo testInfo) throws Exception {
 		logger.debug("Setting up before '" + testInfo.getTestMethod().get().getName() + "'");
 
-		this.port = SocketUtils.findAvailableTcpPort(61613);
 		this.responseChannel = new ExecutorSubscribableChannel();
 		this.responseHandler = new TestMessageHandler();
 		this.responseChannel.subscribe(this.responseHandler);
@@ -88,14 +90,25 @@ public class StompBrokerRelayMessageHandlerIntegrationTests {
 	}
 
 	private void startActiveMQBroker() throws Exception {
+		TransportConnector stompConnector = createStompConnector(this.port);
 		this.activeMQBroker = new BrokerService();
-		this.activeMQBroker.addConnector("stomp://localhost:" + this.port);
+		this.activeMQBroker.addConnector(stompConnector);
 		this.activeMQBroker.setStartAsync(false);
 		this.activeMQBroker.setPersistent(false);
 		this.activeMQBroker.setUseJmx(false);
 		this.activeMQBroker.getSystemUsage().getMemoryUsage().setLimit(1024 * 1024 * 5);
 		this.activeMQBroker.getSystemUsage().getTempUsage().setLimit(1024 * 1024 * 5);
 		this.activeMQBroker.start();
+
+		// Reuse existing ephemeral port on restart (i.e., the next time this method
+		// is invoked) since it will already be configured in the relay
+		this.port = (this.port != 0 ? this.port : stompConnector.getServer().getSocketAddress().getPort());
+	}
+
+	private TransportConnector createStompConnector(int port) throws Exception {
+		TransportConnector connector = new TransportConnector();
+		connector.setUri(new URI("stomp://localhost:" + port));
+		return connector;
 	}
 
 	private void createAndStartRelay() throws InterruptedException {

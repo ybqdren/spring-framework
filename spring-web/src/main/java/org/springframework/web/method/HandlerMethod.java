@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2021 the original author or authors.
+ * Copyright 2002-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,7 +36,7 @@ import org.springframework.core.MethodParameter;
 import org.springframework.core.ResolvableType;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.core.annotation.SynthesizingMethodParameter;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -85,7 +85,7 @@ public class HandlerMethod {
 	private final MethodParameter[] parameters;
 
 	@Nullable
-	private HttpStatus responseStatus;
+	private HttpStatusCode responseStatus;
 
 	@Nullable
 	private String responseStatusReason;
@@ -296,7 +296,7 @@ public class HandlerMethod {
 	 * @see ResponseStatus#code()
 	 */
 	@Nullable
-	protected HttpStatus getResponseStatus() {
+	protected HttpStatusCode getResponseStatus() {
 		return this.responseStatus;
 	}
 
@@ -580,21 +580,21 @@ public class HandlerMethod {
 	private class ReturnValueMethodParameter extends HandlerMethodParameter {
 
 		@Nullable
-		private final Object returnValue;
+		private final Class<?> returnValueType;
 
 		public ReturnValueMethodParameter(@Nullable Object returnValue) {
 			super(-1);
-			this.returnValue = returnValue;
+			this.returnValueType = (returnValue != null ? returnValue.getClass() : null);
 		}
 
 		protected ReturnValueMethodParameter(ReturnValueMethodParameter original) {
 			super(original);
-			this.returnValue = original.returnValue;
+			this.returnValueType = original.returnValueType;
 		}
 
 		@Override
 		public Class<?> getParameterType() {
-			return (this.returnValue != null ? this.returnValue.getClass() : super.getParameterType());
+			return (this.returnValueType != null ? this.returnValueType : super.getParameterType());
 		}
 
 		@Override

@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2021 the original author or authors.
+ * Copyright 2002-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -61,6 +61,7 @@ import org.springframework.core.testfixture.io.SerializationTestUtils;
 import org.springframework.lang.Nullable;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatException;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatIOException;
 
@@ -304,16 +305,13 @@ public class ProxyFactoryBeanTests {
 
 		final Exception ex = new UnsupportedOperationException("invoke");
 		// Add evil interceptor to head of list
-		config.addAdvice(0, new MethodInterceptor() {
-			@Override
-			public Object invoke(MethodInvocation invocation) throws Throwable {
-				throw ex;
-			}
+		config.addAdvice(0, (MethodInterceptor) invocation -> {
+			throw ex;
 		});
 		assertThat(config.getAdvisors().length).as("Have correct advisor count").isEqualTo(2);
 
 		ITestBean tb1 = (ITestBean) factory.getBean("test1");
-		assertThatExceptionOfType(Exception.class)
+		assertThatException()
 			.isThrownBy(tb1::toString)
 			.isSameAs(ex);
 	}
@@ -441,8 +439,7 @@ public class ProxyFactoryBeanTests {
 		assertThat(cba.getCalls()).isEqualTo(2);
 		assertThat(th.getCalls()).isEqualTo(0);
 		Exception expected = new Exception();
-		assertThatExceptionOfType(Exception.class).isThrownBy(() ->
-				echo.echoException(1, expected))
+		assertThatException().isThrownBy(() -> echo.echoException(1, expected))
 			.matches(expected::equals);
 		// No throws handler method: count should still be 0
 		assertThat(th.getCalls()).isEqualTo(0);
@@ -589,8 +586,7 @@ public class ProxyFactoryBeanTests {
 
 		((Lockable) bean1).lock();
 
-		assertThatExceptionOfType(LockedException.class).isThrownBy(() ->
-				bean1.setAge(5));
+		assertThatExceptionOfType(LockedException.class).isThrownBy(() -> bean1.setAge(5));
 
 		bean2.setAge(6); //do not expect LockedException"
 	}
@@ -610,8 +606,7 @@ public class ProxyFactoryBeanTests {
 
 		((Lockable) bean1).lock();
 
-		assertThatExceptionOfType(LockedException.class).isThrownBy(() ->
-				bean1.setAge(5));
+		assertThatExceptionOfType(LockedException.class).isThrownBy(() -> bean1.setAge(5));
 
 		// do not expect LockedException
 		bean2.setAge(6);
@@ -691,12 +686,9 @@ public class ProxyFactoryBeanTests {
 		}
 
 		public PointcutForVoid() {
-			setAdvice(new MethodInterceptor() {
-				@Override
-				public Object invoke(MethodInvocation invocation) throws Throwable {
-					methodNames.add(invocation.getMethod().getName());
-					return invocation.proceed();
-				}
+			setAdvice((MethodInterceptor) invocation -> {
+				methodNames.add(invocation.getMethod().getName());
+				return invocation.proceed();
 			});
 			setPointcut(new DynamicMethodMatcherPointcut() {
 				@Override

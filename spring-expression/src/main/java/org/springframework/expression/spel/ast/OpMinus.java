@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2021 the original author or authors.
+ * Copyright 2002-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -184,40 +184,22 @@ public class OpMinus extends Operator {
 			cf.exitCompilationScope();
 			CodeFlow.insertNumericUnboxOrPrimitiveTypeCoercion(mv, rightDesc, targetDesc);
 			switch (targetDesc) {
-				case 'I':
-					mv.visitInsn(ISUB);
-					break;
-				case 'J':
-					mv.visitInsn(LSUB);
-					break;
-				case 'F':
-					mv.visitInsn(FSUB);
-					break;
-				case 'D':
-					mv.visitInsn(DSUB);
-					break;
-				default:
-					throw new IllegalStateException(
-							"Unrecognized exit type descriptor: '" + this.exitTypeDescriptor + "'");
+				case 'I' -> mv.visitInsn(ISUB);
+				case 'J' -> mv.visitInsn(LSUB);
+				case 'F' -> mv.visitInsn(FSUB);
+				case 'D' -> mv.visitInsn(DSUB);
+				default -> throw new IllegalStateException(
+						"Unrecognized exit type descriptor: '" + this.exitTypeDescriptor + "'");
 			}
 		}
 		else {
 			switch (targetDesc) {
-				case 'I':
-					mv.visitInsn(INEG);
-					break;
-				case 'J':
-					mv.visitInsn(LNEG);
-					break;
-				case 'F':
-					mv.visitInsn(FNEG);
-					break;
-				case 'D':
-					mv.visitInsn(DNEG);
-					break;
-				default:
-					throw new IllegalStateException(
-							"Unrecognized exit type descriptor: '" + this.exitTypeDescriptor + "'");
+				case 'I' -> mv.visitInsn(INEG);
+				case 'J' -> mv.visitInsn(LNEG);
+				case 'F' -> mv.visitInsn(FNEG);
+				case 'D' -> mv.visitInsn(DNEG);
+				default -> throw new IllegalStateException(
+						"Unrecognized exit type descriptor: '" + this.exitTypeDescriptor + "'");
 			}
 		}
 		cf.pushDescriptor(this.exitTypeDescriptor);

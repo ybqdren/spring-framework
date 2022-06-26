@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2021 the original author or authors.
+ * Copyright 2002-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -169,20 +169,20 @@ public class HibernateJpaVendorAdapter extends AbstractJpaVendorAdapter {
 	 */
 	@Nullable
 	protected Class<?> determineDatabaseDialectClass(Database database) {
-		switch (database) {
-			case DB2: return DB2Dialect.class;
-			case DERBY: return DerbyTenSevenDialect.class;
-			case H2: return H2Dialect.class;
-			case HANA: return HANAColumnStoreDialect.class;
-			case HSQL: return HSQLDialect.class;
-			case INFORMIX: return Informix10Dialect.class;
-			case MYSQL: return MySQL57Dialect.class;
-			case ORACLE: return Oracle12cDialect.class;
-			case POSTGRESQL: return PostgreSQL95Dialect.class;
-			case SQL_SERVER: return SQLServer2012Dialect.class;
-			case SYBASE: return SybaseDialect.class;
-			default: return null;
-		}
+		return switch (database) {
+			case DB2 -> DB2Dialect.class;
+			case DERBY -> DerbyTenSevenDialect.class;
+			case H2 -> H2Dialect.class;
+			case HANA -> HANAColumnStoreDialect.class;
+			case HSQL -> HSQLDialect.class;
+			case INFORMIX -> Informix10Dialect.class;
+			case MYSQL -> MySQL57Dialect.class;
+			case ORACLE -> Oracle12cDialect.class;
+			case POSTGRESQL -> PostgreSQL95Dialect.class;
+			case SQL_SERVER -> SQLServer2012Dialect.class;
+			case SYBASE -> SybaseDialect.class;
+			default -> null;
+		};
 	}
 
 	@Override

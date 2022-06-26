@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2021 the original author or authors.
+ * Copyright 2002-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -155,14 +155,11 @@ public class MarshallingMessageConverter implements MessageConverter, Initializi
 	public Message toMessage(Object object, Session session) throws JMSException, MessageConversionException {
 		Assert.state(this.marshaller != null, "No Marshaller set");
 		try {
-			switch (this.targetType) {
-				case TEXT:
-					return marshalToTextMessage(object, session, this.marshaller);
-				case BYTES:
-					return marshalToBytesMessage(object, session, this.marshaller);
-				default:
-					return marshalToMessage(object, session, this.marshaller, this.targetType);
-			}
+			return switch (this.targetType) {
+				case TEXT -> marshalToTextMessage(object, session, this.marshaller);
+				case BYTES -> marshalToBytesMessage(object, session, this.marshaller);
+				default -> marshalToMessage(object, session, this.marshaller, this.targetType);
+			};
 		}
 		catch (XmlMappingException | IOException ex) {
 			throw new MessageConversionException("Could not marshal [" + object + "]", ex);

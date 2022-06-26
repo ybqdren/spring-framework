@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2021 the original author or authors.
+ * Copyright 2002-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -112,21 +112,12 @@ public class OpModulus extends Operator {
 			cf.exitCompilationScope();
 			CodeFlow.insertNumericUnboxOrPrimitiveTypeCoercion(mv, rightDesc, targetDesc);
 			switch (targetDesc) {
-				case 'I':
-					mv.visitInsn(IREM);
-					break;
-				case 'J':
-					mv.visitInsn(LREM);
-					break;
-				case 'F':
-					mv.visitInsn(FREM);
-					break;
-				case 'D':
-					mv.visitInsn(DREM);
-					break;
-				default:
-					throw new IllegalStateException(
-							"Unrecognized exit type descriptor: '" + this.exitTypeDescriptor + "'");
+				case 'I' -> mv.visitInsn(IREM);
+				case 'J' -> mv.visitInsn(LREM);
+				case 'F' -> mv.visitInsn(FREM);
+				case 'D' -> mv.visitInsn(DREM);
+				default -> throw new IllegalStateException(
+						"Unrecognized exit type descriptor: '" + this.exitTypeDescriptor + "'");
 			}
 		}
 		cf.pushDescriptor(this.exitTypeDescriptor);

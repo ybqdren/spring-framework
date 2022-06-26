@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2021 the original author or authors.
+ * Copyright 2002-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,7 +41,7 @@ import org.springframework.web.testfixture.servlet.MockHttpServletRequest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
 
 /**
  * Unit tests for {@link UriComponentsBuilder}.
@@ -1073,7 +1073,7 @@ class UriComponentsBuilderTests {
 		assertThat(result1.getPath()).isEqualTo("/p1/%s/%s", vars.get("ps1"), vars.get("ps2"));
 		assertThat(result1.getQuery()).isEqualTo("q1");
 		assertThat(result1.getFragment()).isEqualTo("f1");
-		assertThat(result1.getSchemeSpecificPart()).isEqualTo(null);
+		assertThat(result1.getSchemeSpecificPart()).isNull();
 
 		UriComponents result2 = builder2.build();
 		assertThat(result2.getScheme()).isEqualTo("http");
@@ -1082,7 +1082,7 @@ class UriComponentsBuilderTests {
 		assertThat(result2.getPath()).isEqualTo("/p1/%s/%s", vars.get("ps1"), vars.get("ps2"));
 		assertThat(result2.getQuery()).isEqualTo("q1");
 		assertThat(result2.getFragment()).isEqualTo("f1");
-		assertThat(result1.getSchemeSpecificPart()).isEqualTo(null);
+		assertThat(result1.getSchemeSpecificPart()).isNull();
 	}
 
 	@Test // gh-26466
@@ -1321,14 +1321,16 @@ class UriComponentsBuilderTests {
 
 	@Test
 	void verifyInvalidPort() {
-		String url = "http://localhost:port/path";
-		assertThatThrownBy(() -> UriComponentsBuilder.fromUriString(url).build().toUri())
-				.isInstanceOf(NumberFormatException.class);
-		assertThatThrownBy(() -> UriComponentsBuilder.fromHttpUrl(url).build().toUri())
-				.isInstanceOf(NumberFormatException.class);
+		String url = "http://localhost:XXX/path";
+		assertThatIllegalStateException()
+				.isThrownBy(() -> UriComponentsBuilder.fromUriString(url).build().toUri())
+				.withMessage("The port must be an integer: XXX");
+		assertThatIllegalStateException()
+				.isThrownBy(() -> UriComponentsBuilder.fromHttpUrl(url).build().toUri())
+				.withMessage("The port must be an integer: XXX");
 	}
 
-	@Test // gh-27039
+	@Test  // gh-27039
 	void expandPortAndPathWithoutSeparator() {
 		URI uri = UriComponentsBuilder
 				.fromUriString("ws://localhost:{port}{path}")
@@ -1336,6 +1338,5 @@ class UriComponentsBuilderTests {
 				.toUri();
 		assertThat(uri.toString()).isEqualTo("ws://localhost:7777/test");
 	}
-
 
 }

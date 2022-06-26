@@ -1,6 +1,6 @@
 [[websocket]]
 = WebSockets
-:doc-spring-security: {doc-root}/spring-security/site/docs/current/reference
+:doc-spring-security: {doc-root}/spring-security/reference
 [.small]#<<web-reactive.adoc#webflux-websocket, WebFlux>>#
 
 This part of the reference documentation covers support for Servlet stack, WebSocket
@@ -627,10 +627,11 @@ response. By default, the Spring Security Java configuration sets it to `DENY`.
 In 3.2, the Spring Security XML namespace does not set that header by default
 but can be configured to do so. In the future, it may set it by default.
 
-See {doc-spring-security}/htmlsingle/#headers[Default Security Headers]
+See {doc-spring-security}/features/exploits/headers.html#headers-default[Default Security Headers]
 of the Spring Security documentation for details on how to configure the
 setting of the `X-Frame-Options` header. You can also see
-https://jira.spring.io/browse/SEC-2501[SEC-2501] for additional background.
+https://github.com/spring-projects/spring-security/issues/2718[gh-2718]
+for additional background.
 ====
 
 If your application adds the `X-Frame-Options` response header (as it should!)
@@ -1724,19 +1725,11 @@ HTTP session (which is then associated with WebSocket or SockJS sessions created
 for that user) and results in a user header being stamped on every `Message` flowing
 through the application.
 
-Note that the STOMP protocol does have `login` and `passcode` headers
-on the `CONNECT` frame. Those were originally designed for and are still needed,
-for example, for STOMP over TCP. However, for STOMP over WebSocket, by default,
-Spring ignores authorization headers at the STOMP protocol level, assumes that
-the user is already authenticated at the HTTP transport level, and expects that
-the WebSocket or SockJS session contain the authenticated user.
-
-NOTE: Spring Security provides
-https://docs.spring.io/spring-security/site/docs/current/reference/htmlsingle/#websocket[WebSocket sub-protocol authorization]
-that uses a `ChannelInterceptor` to authorize messages based on the user header in them.
-Also, Spring Session provides a
-https://docs.spring.io/spring-session/docs/current/reference/html5/#websocket[WebSocket integration]
-that ensures the user HTTP session does not expire when the WebSocket session is still active.
+The STOMP protocol does have `login` and `passcode` headers on the `CONNECT` frame.
+Those were originally designed for and are needed for STOMP over TCP. However, for STOMP
+over WebSocket, by default, Spring ignores authentication headers at the STOMP protocol
+level, and assumes that the user is already authenticated at the HTTP transport level.
+The expectation is that the WebSocket or SockJS session contain the authenticated user.
 
 
 
@@ -1811,6 +1804,18 @@ you need to ensure that the authentication `ChannelInterceptor` config is ordere
 ahead of Spring Security's. This is best done by declaring the custom interceptor in
 its own implementation of `WebSocketMessageBrokerConfigurer` that is marked with
 `@Order(Ordered.HIGHEST_PRECEDENCE + 99)`.
+
+
+
+[[websocket-stomp-authorization]]
+=== Authorization
+
+Spring Security provides
+{doc-spring-security}/servlet/integrations/websocket.html#websocket-authorization[WebSocket sub-protocol authorization]
+that uses a `ChannelInterceptor` to authorize messages based on the user header in them.
+Also, Spring Session provides
+https://docs.spring.io/spring-session/reference/web-socket.html[WebSocket integration]
+that ensures the user's HTTP session does not expire while the WebSocket session is still active.
 
 
 

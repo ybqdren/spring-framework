@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2021 the original author or authors.
+ * Copyright 2002-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 package org.springframework.http.converter.json;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
@@ -52,6 +53,7 @@ import org.springframework.core.GenericTypeResolver;
 import org.springframework.http.HttpInputMessage;
 import org.springframework.http.HttpOutputMessage;
 import org.springframework.http.MediaType;
+import org.springframework.http.ProblemDetail;
 import org.springframework.http.converter.AbstractGenericHttpMessageConverter;
 import org.springframework.http.converter.HttpMessageConversionException;
 import org.springframework.http.converter.HttpMessageConverter;
@@ -91,6 +93,8 @@ public abstract class AbstractJackson2HttpMessageConverter extends AbstractGener
 	}
 
 
+	private List<MediaType> problemDetailMediaTypes = Collections.singletonList(MediaType.APPLICATION_PROBLEM_JSON);
+
 	protected ObjectMapper defaultObjectMapper;
 
 	@Nullable
@@ -120,6 +124,19 @@ public abstract class AbstractJackson2HttpMessageConverter extends AbstractGener
 		setSupportedMediaTypes(Arrays.asList(supportedMediaTypes));
 	}
 
+
+	@Override
+	public void setSupportedMediaTypes(List<MediaType> supportedMediaTypes) {
+		this.problemDetailMediaTypes = initProblemDetailMediaTypes(supportedMediaTypes);
+		super.setSupportedMediaTypes(supportedMediaTypes);
+	}
+
+	private List<MediaType> initProblemDetailMediaTypes(List<MediaType> supportedMediaTypes) {
+		List<MediaType> mediaTypes = new ArrayList<>();
+		mediaTypes.add(MediaType.APPLICATION_PROBLEM_JSON);
+		mediaTypes.addAll(supportedMediaTypes);
+		return Collections.unmodifiableList(mediaTypes);
+	}
 
 	/**
 	 * Configure the main {@code ObjectMapper} to use for Object conversion.
@@ -197,7 +214,11 @@ public abstract class AbstractJackson2HttpMessageConverter extends AbstractGener
 				result.addAll(entry.getValue().keySet());
 			}
 		}
-		return (CollectionUtils.isEmpty(result) ? getSupportedMediaTypes() : result);
+		if (!CollectionUtils.isEmpty(result)) {
+			return result;
+		}
+		return (ProblemDetail.class.isAssignableFrom(clazz) ?
+				this.problemDetailMediaTypes : getSupportedMediaTypes());
 	}
 
 	private Map<Class<?>, Map<MediaType, ObjectMapper>> getObjectMapperRegistrations() {
@@ -354,24 +375,25 @@ public abstract class AbstractJackson2HttpMessageConverter extends AbstractGener
 				"UTF-16".equals(charset.name()) ||
 				"UTF-32".equals(charset.name());
 		try {
+			InputStream inputStream = StreamUtils.nonClosing(inputMessage.getBody());
 			if (inputMessage instanceof MappingJacksonInputMessage mappingJacksonInputMessage) {
 				Class<?> deserializationView = mappingJacksonInputMessage.getDeserializationView();
 				if (deserializationView != null) {
 					ObjectReader objectReader = objectMapper.readerWithView(deserializationView).forType(javaType);
 					if (isUnicode) {
-						return objectReader.readValue(inputMessage.getBody());
+						return objectReader.readValue(inputStream);
 					}
 					else {
-						Reader reader = new InputStreamReader(inputMessage.getBody(), charset);
+						Reader reader = new InputStreamReader(inputStream, charset);
 						return objectReader.readValue(reader);
 					}
 				}
 			}
 			if (isUnicode) {
-				return objectMapper.readValue(inputMessage.getBody(), javaType);
+				return objectMapper.readValue(inputStream, javaType);
 			}
 			else {
-				Reader reader = new InputStreamReader(inputMessage.getBody(), charset);
+				Reader reader = new InputStreamReader(inputStream, charset);
 				return objectMapper.readValue(reader, javaType);
 			}
 		}
