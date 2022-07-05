@@ -17,6 +17,8 @@
 package org.springframework.aot.graalvm;
 
 import java.lang.reflect.Field;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import com.oracle.graal.pointsto.infrastructure.SubstitutionProcessor;
@@ -43,9 +45,12 @@ class ConstantFieldSubstitutionProcessor extends SubstitutionProcessor {
 	private static Pattern[] patterns = {
 			Pattern.compile(Pattern.quote("org.springframework.core.NativeDetector#imageCode")),
 			Pattern.compile(Pattern.quote("org.springframework.") + ".*#.*Present"),
+			Pattern.compile(Pattern.quote("org.springframework.") + ".*#.*_PRESENT")
 	};
 
 	private final ThrowawayClassLoader throwawayClassLoader;
+
+	private Set<String> seen = new LinkedHashSet<>();
 
 
 	ConstantFieldSubstitutionProcessor(DebugContext debug, ClassLoader applicationClassLoader) {
@@ -63,7 +68,10 @@ class ConstantFieldSubstitutionProcessor extends SubstitutionProcessor {
 					JavaConstant constant = lookupConstant(declaringClass.toJavaName(), field.getName());
 					if (constant != null) {
 						// TODO Use proper logging only when --verbose is specified when https://github.com/oracle/graal/issues/4669 will be fixed
-						System.out.println("Field " + fieldIdentifier + " set to " + constant.toValueString() + " at build time");
+						if (!this.seen.contains(fieldIdentifier)) {
+							this.seen.add(fieldIdentifier);
+							System.out.println("Field " + fieldIdentifier + " set to " + constant.toValueString() + " at build time");
+						}
 						return new ConstantReadableJavaField(field, constant);
 					}
 				}

@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
-package org.springframework.aot.hint.support;
+package org.springframework.context.aot;
 
 import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
+import java.lang.reflect.RecordComponent;
 import java.lang.reflect.Type;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -90,46 +91,33 @@ public class BindingReflectionHintsRegistrar {
 				}
 				seen.add(type);
 				if (shouldRegisterMembers(clazz)) {
-					builder.withMembers(
-							MemberCategory.DECLARED_FIELDS,
-							MemberCategory.INVOKE_DECLARED_CONSTRUCTORS);
-					try {
-						BeanInfo beanInfo = Introspector.getBeanInfo(clazz);
-						PropertyDescriptor[] propertyDescriptors = beanInfo.getPropertyDescriptors();
-						for (PropertyDescriptor propertyDescriptor : propertyDescriptors) {
-							Method writeMethod = propertyDescriptor.getWriteMethod();
-							if (writeMethod != null && writeMethod.getDeclaringClass() != Object.class) {
-								hints.registerMethod(writeMethod, INVOKE);
-								MethodParameter methodParameter = MethodParameter.forExecutable(writeMethod, 0);
-								Type methodParameterType = methodParameter.getGenericParameterType();
-								if (!seen.contains(methodParameterType)) {
-									registerReflectionHints(hints, seen, methodParameterType);
-								}
-							}
-							Method readMethod = propertyDescriptor.getReadMethod();
-							if (readMethod != null && readMethod.getDeclaringClass() != Object.class) {
-								hints.registerMethod(readMethod, INVOKE);
-								MethodParameter methodParameter = MethodParameter.forExecutable(readMethod, -1);
-								Type methodParameterType = methodParameter.getGenericParameterType();
-								if (!seen.contains(methodParameterType)) {
-									registerReflectionHints(hints, seen, methodParameterType);
-								}
+					if (clazz.isRecord()) {
+						builder.withMembers(MemberCategory.INVOKE_DECLARED_CONSTRUCTORS);
+						for (RecordComponent recordComponent : clazz.getRecordComponents()) {
+							registerRecordHints(hints, seen, recordComponent.getAccessor());
+						}
+					}
+					else {
+						builder.withMembers(
+								MemberCategory.DECLARED_FIELDS,
+								MemberCategory.INVOKE_DECLARED_CONSTRUCTORS);
+						try {
+							BeanInfo beanInfo = Introspector.getBeanInfo(clazz);
+							PropertyDescriptor[] propertyDescriptors = beanInfo.getPropertyDescriptors();
+							for (PropertyDescriptor propertyDescriptor : propertyDescriptors) {
+								registerPropertyHints(hints, seen, propertyDescriptor.getWriteMethod(), 0);
+								registerPropertyHints(hints, seen, propertyDescriptor.getReadMethod(), -1);
 							}
 						}
-						String companionClassName = clazz.getCanonicalName() + KOTLIN_COMPANION_SUFFIX;
-						if (KotlinDetector.isKotlinType(clazz) && ClassUtils.isPresent(companionClassName, null)) {
-							Class<?> companionClass = ClassUtils.resolveClassName(companionClassName, null);
-							Method serializerMethod = ClassUtils.getMethodIfAvailable(companionClass, "serializer");
-							if (serializerMethod != null) {
-								hints.registerMethod(serializerMethod);
+						catch (IntrospectionException ex) {
+							if (logger.isDebugEnabled()) {
+								logger.debug("Ignoring referenced type [" + clazz.getName() + "]: " + ex.getMessage());
 							}
 						}
 					}
-					catch (IntrospectionException ex) {
-						if (logger.isDebugEnabled()) {
-							logger.debug("Ignoring referenced type [" + clazz.getName() + "]: " + ex.getMessage());
-						}
-					}
+				}
+				if (KotlinDetector.isKotlinType(clazz)) {
+					registerKotlinSerializationHints(hints, clazz);
 				}
 			});
 		}
@@ -138,13 +126,45 @@ public class BindingReflectionHintsRegistrar {
 		referencedTypes.forEach(referencedType -> registerReflectionHints(hints, seen, referencedType));
 	}
 
-	private void collectReferencedTypes(Set<Type> seen, Set<Class<?>> types, @Nullable Type type) {
-		if (type == null || seen.contains(type)) {
+	private void registerRecordHints(ReflectionHints hints, Set<Type> seen, Method method) {
+		hints.registerMethod(method, INVOKE);
+		MethodParameter methodParameter = MethodParameter.forExecutable(method, -1);
+		Type methodParameterType = methodParameter.getGenericParameterType();
+		if (!seen.contains(methodParameterType)) {
+			registerReflectionHints(hints, seen, methodParameterType);
+		}
+	}
+
+	private void registerPropertyHints(ReflectionHints hints, Set<Type> seen, @Nullable Method method, int parameterIndex) {
+		if (method != null && method.getDeclaringClass() != Object.class
+				&& method.getDeclaringClass() != Enum.class) {
+			hints.registerMethod(method, INVOKE);
+			MethodParameter methodParameter = MethodParameter.forExecutable(method, parameterIndex);
+			Type methodParameterType = methodParameter.getGenericParameterType();
+			if (!seen.contains(methodParameterType)) {
+				registerReflectionHints(hints, seen, methodParameterType);
+			}
+		}
+	}
+
+	private void registerKotlinSerializationHints(ReflectionHints hints, Class<?> clazz) {
+		String companionClassName = clazz.getCanonicalName() + KOTLIN_COMPANION_SUFFIX;
+		if (ClassUtils.isPresent(companionClassName, null)) {
+			Class<?> companionClass = ClassUtils.resolveClassName(companionClassName, null);
+			Method serializerMethod = ClassUtils.getMethodIfAvailable(companionClass, "serializer");
+			if (serializerMethod != null) {
+				hints.registerMethod(serializerMethod);
+			}
+		}
+	}
+
+	private void collectReferencedTypes(Set<Type> seen, Set<Class<?>> types, Type type) {
+		if (seen.contains(type)) {
 			return;
 		}
 		ResolvableType resolvableType = ResolvableType.forType(type);
 		Class<?> clazz = resolvableType.resolve();
-		if (clazz != null) {
+		if (clazz != null && !types.contains(clazz)) {
 			types.add(clazz);
 			for (ResolvableType genericResolvableType : resolvableType.getGenerics()) {
 				collectReferencedTypes(seen, types, genericResolvableType.getType());
